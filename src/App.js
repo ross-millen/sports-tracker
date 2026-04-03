@@ -163,7 +163,7 @@ function BarChart({ data, tooltipFormatter }) {
           const label = `${Math.floor(data.minutes / 60)}h${data.minutes % 60}m`
           return (
             <div key={name} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: '1em', color: '#8b0000', marginBottom: '6px', fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>
+              <div style={{ fontSize: '0.58em', color: 'rgba(80,20,20,0.5)', marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
                 {label}
               </div>
               <div
@@ -178,10 +178,10 @@ function BarChart({ data, tooltipFormatter }) {
                 onMouseLeave={() => setTooltip(null)}
               />
               <div style={{
-                fontSize: '0.58em', color: 'rgba(139,0,0,0.6)', marginTop: '8px',
-                fontFamily: 'Montserrat', letterSpacing: '2px', textTransform: 'uppercase',
+                fontSize: '0.55em', color: 'rgba(80,20,20,0.5)', marginTop: '8px',
+                fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
                 textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
-                textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600,
+                textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {name}
               </div>
