@@ -139,13 +139,111 @@ const globalStyles = `
 `
 
 const COLORS = [
-  '#8b0000', '#cc2200', '#e85d04', '#f48c06',
-  '#606c38', '#283618', '#386641', '#1d3557'
+  '#c4756b', '#d4956a', '#c9a97a', '#8fa88a',
+  '#7a9aad', '#9b8aad', '#b8956a', '#7a8a7a'
 ]
 
 const LOCATION_RULES = {
   'schroders': 'Old Street',
   'caine': 'Whitechapel',
+}
+
+function DonutChart({ data }) {
+  const [tooltip, setTooltip] = useState(null)
+  const entries = Object.entries(data).sort((a, b) => b[1].minutes - a[1].minutes)
+  if (entries.length === 0) return null
+
+  const total = entries.reduce((s, [, v]) => s + v.minutes, 0)
+  const R = 80, cx = 110, cy = 95, stroke = 28
+  let cumAngle = -Math.PI / 2
+
+  const slices = entries.map(([name, val], i) => {
+    const frac = val.minutes / total
+    const angle = frac * 2 * Math.PI
+    const x1 = cx + R * Math.cos(cumAngle)
+    const y1 = cy + R * Math.sin(cumAngle)
+    cumAngle += angle
+    const x2 = cx + R * Math.cos(cumAngle)
+    const y2 = cy + R * Math.sin(cumAngle)
+    const large = angle > Math.PI ? 1 : 0
+    const midAngle = cumAngle - angle / 2
+    return { name, val, color: COLORS[i % COLORS.length], x1, y1, x2, y2, large, midAngle, frac }
+  })
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+        <svg viewBox="0 0 220 190" style={{ width: '180px', flexShrink: 0 }}>
+          {slices.map((s, i) => {
+            const startAngle = i === 0 ? -Math.PI / 2 : slices.slice(0, i).reduce((a, sl) => a + sl.frac * 2 * Math.PI, -Math.PI / 2)
+            const endAngle = startAngle + s.frac * 2 * Math.PI
+            const x1 = cx + R * Math.cos(startAngle)
+            const y1 = cy + R * Math.sin(startAngle)
+            const x2 = cx + R * Math.cos(endAngle)
+            const y2 = cy + R * Math.sin(endAngle)
+            const large = s.frac > 0.5 ? 1 : 0
+            return (
+              <path
+                key={i}
+                d={`M ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2}`}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={stroke}
+                strokeLinecap="butt"
+                style={{ cursor: 'pointer', transition: 'opacity 0.2s ease' }}
+                onMouseOver={e => { e.target.style.opacity = '0.8' }}
+                onMouseOut={e => { e.target.style.opacity = '1' }}
+                onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, s })}
+                onMouseLeave={() => setTooltip(null)}
+              />
+            )
+          })}
+          {slices.map((s, i) => {
+            const boundaryAngle = i === 0 ? -Math.PI / 2 : slices.slice(0, i).reduce((a, sl) => a + sl.frac * 2 * Math.PI, -Math.PI / 2)
+            const inner = R - stroke / 2, outer = R + stroke / 2
+            return (
+              <line key={i}
+                x1={cx + inner * Math.cos(boundaryAngle)} y1={cy + inner * Math.sin(boundaryAngle)}
+                x2={cx + outer * Math.cos(boundaryAngle)} y2={cy + outer * Math.sin(boundaryAngle)}
+                stroke="black" strokeWidth="1.5"
+              />
+            )
+          })}
+          <circle cx={cx} cy={cy} r={R - stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
+          <circle cx={cx} cy={cy} r={R + stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
+          <text x={cx} y={cy - 8} textAnchor="middle" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', fill: '#2a0a0a', fontWeight: 600 }}>
+            {Math.floor(total / 60)}h
+          </text>
+          <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontFamily: 'Montserrat', fontSize: '7px', fill: '#1a1a1a', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700 }}>
+            TOTAL
+          </text>
+        </svg>
+
+        {/* Legend */}
+        <div style={{ flex: 1, minWidth: '100px' }}>
+          {slices.map((s, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: s.color, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.7em', color: '#2a0a0a', fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>{s.name}</div>
+                <div style={{ fontSize: '0.5em', color: 'rgba(80,20,20,0.4)', letterSpacing: '1px', fontFamily: 'Montserrat' }}>
+                  {Math.floor(s.val.minutes / 60)}h {s.val.minutes % 60}m · {s.val.count} session{s.val.count !== 1 ? 's' : ''}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.6em', color: 'rgba(80,20,20,0.4)', fontFamily: 'Montserrat', fontWeight: 600 }}>
+                {Math.round(s.frac * 100)}%
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {tooltip && (
+        <div className="tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
+          {tooltip.s.name} — {tooltip.s.val.count} session{tooltip.s.val.count !== 1 ? 's' : ''} · {Math.floor(tooltip.s.val.minutes / 60)}h {tooltip.s.val.minutes % 60}m
+        </div>
+      )}
+    </div>
+  )
 }
 
 function BarChart({ data, tooltipFormatter }) {
@@ -165,7 +263,7 @@ function BarChart({ data, tooltipFormatter }) {
           const label = `${Math.floor(data.minutes / 60)}h${data.minutes % 60}m`
           return (
             <div key={name} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: '0.58em', color: 'rgba(80,20,20,0.5)', marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
+              <div style={{ fontSize: '0.58em', color: '#1a1a1a', marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
                 {label}
               </div>
               <div
@@ -180,7 +278,7 @@ function BarChart({ data, tooltipFormatter }) {
                 onMouseLeave={() => setTooltip(null)}
               />
               <div style={{
-                fontSize: '0.55em', color: 'rgba(80,20,20,0.5)', marginTop: '8px',
+                fontSize: '0.55em', color: '#1a1a1a', marginTop: '8px', fontWeight: 700,
                 fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
                 textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
                 textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -462,10 +560,7 @@ function App() {
                     <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
                       Time by Activity
                     </div>
-                    <BarChart
-                      data={activityData}
-                      tooltipFormatter={(name, d) => `${name} — ${d.count} session${d.count !== 1 ? 's' : ''} · ${Math.floor(d.minutes / 60)}h ${d.minutes % 60}m`}
-                    />
+                    <DonutChart data={activityData} />
                   </div>
 
                   {/* Location Chart */}
@@ -487,63 +582,92 @@ function App() {
                 </>
               )}
 
-              {/* Session List */}
+              {/* Timeline */}
               {sessions.length === 0 ? (
                 <p style={{ color: 'rgba(80,20,20,0.3)', fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
               ) : (
-                sessions.map((session, i) => (
-                  <div key={session.id} className="session-card" style={{ animationDelay: `${i * 0.07}s` }}>
-                    {editingId === session.id ? (
-                      <div>
-                        <div style={{ fontSize: '0.58em', letterSpacing: '2px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', marginBottom: '12px', fontWeight: 500 }}>Editing</div>
+                <div style={{ position: 'relative', paddingLeft: '28px' }}>
+                  {/* Vertical line */}
+                  <div style={{
+                    position: 'absolute', left: '7px', top: '8px', bottom: '8px',
+                    width: '1px', background: 'linear-gradient(to bottom, #8b0000, rgba(139,0,0,0.1))',
+                  }} />
 
-                        <div style={{ marginBottom: '12px' }}>
-                          <div style={editLabelStyle}>Sport / Activity</div>
-                          <input className="inline-input" value={editSport} onChange={e => setEditSport(e.target.value)} />
-                        </div>
+                  {sessions.map((session, i) => (
+                    <div key={session.id} style={{ position: 'relative', marginBottom: '20px', animation: `fadeUp 0.4s ease ${i * 0.06}s both` }}>
+                      {/* Dot on the line */}
+                      <div style={{
+                        position: 'absolute', left: '-24px', top: '42px',
+                        width: '9px', height: '9px', borderRadius: '50%',
+                        background: editingId === session.id ? '#8b0000' : 'white',
+                        border: '2px solid #8b0000',
+                        boxShadow: '0 0 0 3px rgba(139,0,0,0.08)',
+                      }} />
 
-                        <div style={{ marginBottom: '12px' }}>
-                          <div style={editLabelStyle}>Date</div>
-                          <input className="inline-input" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
-                        </div>
+                      {editingId === session.id ? (
+                        <div style={{
+                          background: 'white', borderRadius: '4px', padding: '20px',
+                          border: '1px solid rgba(139,0,0,0.15)', boxShadow: '0 2px 16px rgba(139,0,0,0.08)',
+                        }}>
+                          <div style={{ fontSize: '0.58em', letterSpacing: '2px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', marginBottom: '12px', fontWeight: 500 }}>Editing</div>
 
-                        <div style={{ marginBottom: '12px' }}>
-                          <div style={editLabelStyle}>Duration (minutes)</div>
-                          <input className="inline-input" type="number" value={editDuration} onChange={e => setEditDuration(e.target.value)} />
-                        </div>
-
-                        <div style={{ marginBottom: '16px' }}>
-                          <div style={editLabelStyle}>Location</div>
-                          <input className="inline-input" value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="Optional" />
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <button className="delete-btn" onClick={() => deleteSession(session.id)}>Delete</button>
-                          <div>
-                            <button className="cancel-btn" onClick={cancelEdit}>Cancel</button>
-                            <button className="edit-btn" onClick={() => saveEdit(session.id)}>Save</button>
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={editLabelStyle}>Sport / Activity</div>
+                            <input className="inline-input" value={editSport} onChange={e => setEditSport(e.target.value)} />
+                          </div>
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={editLabelStyle}>Date</div>
+                            <input className="inline-input" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
+                          </div>
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={editLabelStyle}>Duration (minutes)</div>
+                            <input className="inline-input" type="number" value={editDuration} onChange={e => setEditDuration(e.target.value)} />
+                          </div>
+                          <div style={{ marginBottom: '16px' }}>
+                            <div style={editLabelStyle}>Location</div>
+                            <input className="inline-input" value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="Optional" />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <button className="delete-btn" onClick={() => deleteSession(session.id)}>Delete</button>
+                            <div>
+                              <button className="cancel-btn" onClick={cancelEdit}>Cancel</button>
+                              <button className="edit-btn" onClick={() => saveEdit(session.id)}>Save</button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25em', color: '#2a0a0a', fontWeight: 600, marginBottom: '6px' }}>
-                            {session.sport_name}
+                      ) : (
+                        <div style={{
+                          background: 'white', borderRadius: '4px', padding: '16px 20px',
+                          border: '1px solid rgba(139,0,0,0.07)',
+                          boxShadow: '0 1px 8px rgba(139,0,0,0.05)',
+                          transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+                        }}
+                          onMouseOver={e => { e.currentTarget.style.boxShadow = '0 2px 16px rgba(139,0,0,0.1)'; e.currentTarget.style.borderColor = 'rgba(139,0,0,0.2)' }}
+                          onMouseOut={e => { e.currentTarget.style.boxShadow = '0 1px 8px rgba(139,0,0,0.05)'; e.currentTarget.style.borderColor = 'rgba(139,0,0,0.07)' }}
+                        >
+                          {/* Date stamp above card */}
+                          <div style={{ fontSize: '0.52em', letterSpacing: '2px', color: 'rgba(139,0,0,0.4)', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
+                            {formatUKDate(session.date)}
                           </div>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            <span style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>{formatUKDate(session.date)}</span>
-                            <span style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>{session.duration_mins} min</span>
-                            {session.location && (
-                              <span style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>📍 {session.location}</span>
-                            )}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: '#2a0a0a', fontWeight: 600, marginBottom: '6px', lineHeight: 1.1 }}>
+                                {session.sport_name}
+                              </div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                                <span style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.62em', letterSpacing: '2px', textTransform: 'uppercase' }}>{session.duration_mins} min</span>
+                                {session.location && (
+                                  <span style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.62em', letterSpacing: '2px', textTransform: 'uppercase' }}>· {session.location}</span>
+                                )}
+                              </div>
+                            </div>
+                            <button className="edit-btn" onClick={() => startEdit(session)}>Edit</button>
                           </div>
                         </div>
-                        <button className="edit-btn" onClick={() => startEdit(session)}>Edit</button>
-                      </div>
-                    )}
-                  </div>
-                ))
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}

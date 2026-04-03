@@ -370,43 +370,66 @@ export default function GuinnessLog({ onBack }) {
               {sessions.length === 0 ? (
                 <p style={{ color: 'rgba(245,236,215,0.2)', fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
               ) : (
-                sessions.map((session, i) => (
-                  <div key={session.id} className="gu-card" style={{ animationDelay: `${i * 0.07}s` }}>
-                    {editingId === session.id ? (
-                      <div>
-                        <div style={{ fontSize: '0.58em', letterSpacing: '2px', color: G.goldMuted, textTransform: 'uppercase', marginBottom: '12px', fontWeight: 500 }}>Editing</div>
-
-                        <div style={{ marginBottom: '12px' }}>
-                          <div style={editLabelStyle}>Date</div>
-                          <input className="gu-inline-input" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
-                        </div>
-
-                        <div style={{ marginBottom: '16px' }}>
-                          <div style={editLabelStyle}>Pints</div>
-                          <input className="gu-inline-input" type="number" value={editCount} onChange={e => setEditCount(e.target.value)} />
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <button className="gu-delete-btn" onClick={() => deleteSession(session.id)}>Delete</button>
-                          <div>
-                            <button className="gu-cancel-btn" onClick={cancelEdit}>Cancel</button>
-                            <button className="gu-edit-btn" onClick={() => saveEdit(session.id)}>Save</button>
+                <div style={{ position: 'relative', paddingLeft: '28px' }}>
+                  <div style={{
+                    position: 'absolute', left: '7px', top: '8px', bottom: '8px',
+                    width: '1px', background: `linear-gradient(to bottom, ${G.gold}, rgba(201,164,82,0.1))`,
+                  }} />
+                  {sessions.map((session, i) => (
+                    <div key={session.id} style={{ position: 'relative', marginBottom: '20px', animation: `guFadeUp 0.4s ease ${i * 0.06}s both` }}>
+                      <div style={{
+                        position: 'absolute', left: '-24px', top: '42px',
+                        width: '9px', height: '9px', borderRadius: '50%',
+                        background: editingId === session.id ? G.gold : G.surface,
+                        border: `2px solid ${G.gold}`,
+                        boxShadow: `0 0 0 3px ${G.goldFaint}`,
+                      }} />
+                      {editingId === session.id ? (
+                        <div style={{
+                          background: G.surface, borderRadius: '4px', padding: '20px',
+                          border: `1px solid rgba(201,164,82,0.2)`, boxShadow: '0 2px 16px rgba(0,0,0,0.2)',
+                        }}>
+                          <div style={{ fontSize: '0.58em', letterSpacing: '2px', color: G.goldMuted, textTransform: 'uppercase', marginBottom: '12px', fontWeight: 500 }}>Editing</div>
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={editLabelStyle}>Date</div>
+                            <input className="gu-inline-input" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
+                          </div>
+                          <div style={{ marginBottom: '16px' }}>
+                            <div style={editLabelStyle}>Pints</div>
+                            <input className="gu-inline-input" type="number" value={editCount} onChange={e => setEditCount(e.target.value)} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <button className="gu-delete-btn" onClick={() => deleteSession(session.id)}>Delete</button>
+                            <div>
+                              <button className="gu-cancel-btn" onClick={cancelEdit}>Cancel</button>
+                              <button className="gu-edit-btn" onClick={() => saveEdit(session.id)}>Save</button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25em', color: G.cream, fontWeight: 600, marginBottom: '6px' }}>
-                            {session.count} pints
+                      ) : (
+                        <div style={{
+                          background: G.surface, borderRadius: '4px', padding: '16px 20px',
+                          border: `1px solid rgba(201,164,82,0.08)`,
+                          boxShadow: '0 1px 8px rgba(0,0,0,0.15)',
+                          transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+                        }}
+                          onMouseOver={e => { e.currentTarget.style.boxShadow = '0 2px 16px rgba(0,0,0,0.25)'; e.currentTarget.style.borderColor = `rgba(201,164,82,0.25)` }}
+                          onMouseOut={e => { e.currentTarget.style.boxShadow = '0 1px 8px rgba(0,0,0,0.15)'; e.currentTarget.style.borderColor = `rgba(201,164,82,0.08)` }}
+                        >
+                          <div style={{ fontSize: '0.52em', letterSpacing: '2px', color: G.goldMuted, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
+                            {formatUKDate(session.date)}
                           </div>
-                          <span style={{ color: G.creamMuted, fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>{formatUKDate(session.date)}</span>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: G.cream, fontWeight: 600, lineHeight: 1.1 }}>
+                              {session.count} pints
+                            </div>
+                            <button className="gu-edit-btn" onClick={() => startEdit(session)}>Edit</button>
+                          </div>
                         </div>
-                        <button className="gu-edit-btn" onClick={() => startEdit(session)}>Edit</button>
-                      </div>
-                    )}
-                  </div>
-                ))
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}

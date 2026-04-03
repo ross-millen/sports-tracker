@@ -129,8 +129,8 @@ const pushupStyles = `
 `
 
 const BAR_COLORS = [
-  '#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa',
-  '#1d4ed8', '#1e40af', '#2e6dbc', '#0ea5e9'
+  '#6b8fc4', '#7aaad4', '#85b4d4', '#90bfcd',
+  '#7a9ec4', '#8aaabf', '#7ab0c9', '#80b8d4'
 ]
 
 function PushupBarChart({ entries }) {
@@ -149,7 +149,7 @@ function PushupBarChart({ entries }) {
           const barH = Math.max(8, (entry.value / maxVal) * chartHeight)
           return (
             <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: '0.58em', color: P.blueMuted, marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
+              <div style={{ fontSize: '0.58em', color: '#1a1a1a', marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
                 {entry.value}
               </div>
               <div
@@ -167,7 +167,7 @@ function PushupBarChart({ entries }) {
                 fontSize: '0.55em', color: P.textMuted, marginTop: '8px',
                 fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
                 textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
-                textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700, color: '#1a1a1a',
               }}>
                 {entry.label}
               </div>
@@ -431,57 +431,79 @@ export default function PushupTracker({ onBack }) {
               </>
             )}
 
-            {/* Session list */}
+            {/* Timeline */}
             {sessions.length === 0 ? (
               <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
             ) : (
-              sessions.map((session, i) => (
-                <div key={session.id} className="pu-card" style={{ animationDelay: `${i * 0.07}s` }}>
-                  {editingId === session.id ? (
-                    <div>
-                      <div style={{ fontSize: '0.58em', letterSpacing: '2px', color: P.blueMuted, textTransform: 'uppercase', marginBottom: '12px', fontWeight: 500 }}>Editing</div>
-
-                      <div style={{ marginBottom: '12px' }}>
-                        <div style={editLabelStyle}>Date</div>
-                        <input className="pu-inline-input" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
-                      </div>
-
-                      <div style={{ marginBottom: '12px' }}>
-                        <div style={editLabelStyle}>Target Area</div>
-                        <input className="pu-inline-input" type="text" value={editTarget} onChange={e => setEditTarget(e.target.value)} placeholder="Optional" />
-                      </div>
-
-                      <div style={{ marginBottom: '16px' }}>
-                        <div style={editLabelStyle}>Count</div>
-                        <input className="pu-inline-input" type="number" value={editCount} onChange={e => setEditCount(e.target.value)} />
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <button className="pu-delete-btn" onClick={() => deleteSession(session.id)}>Delete</button>
-                        <div>
-                          <button className="pu-cancel-btn" onClick={cancelEdit}>Cancel</button>
-                          <button className="pu-edit-btn" onClick={() => saveEdit(session.id)}>Save</button>
+              <div style={{ position: 'relative', paddingLeft: '28px' }}>
+                <div style={{
+                  position: 'absolute', left: '7px', top: '8px', bottom: '8px',
+                  width: '1px', background: 'linear-gradient(to bottom, #1e3a8a, rgba(30,58,138,0.1))',
+                }} />
+                {sessions.map((session, i) => (
+                  <div key={session.id} style={{ position: 'relative', marginBottom: '20px', animation: `puFadeUp 0.4s ease ${i * 0.06}s both` }}>
+                    <div style={{
+                      position: 'absolute', left: '-24px', top: '42px',
+                      width: '9px', height: '9px', borderRadius: '50%',
+                      background: editingId === session.id ? P.blue : 'white',
+                      border: `2px solid ${P.blue}`,
+                      boxShadow: `0 0 0 3px rgba(30,58,138,0.08)`,
+                    }} />
+                    {editingId === session.id ? (
+                      <div style={{
+                        background: 'white', borderRadius: '4px', padding: '20px',
+                        border: `1px solid rgba(30,58,138,0.15)`, boxShadow: '0 2px 16px rgba(30,58,138,0.08)',
+                      }}>
+                        <div style={{ fontSize: '0.58em', letterSpacing: '2px', color: P.blueMuted, textTransform: 'uppercase', marginBottom: '12px', fontWeight: 500 }}>Editing</div>
+                        <div style={{ marginBottom: '12px' }}>
+                          <div style={editLabelStyle}>Date</div>
+                          <input className="pu-inline-input" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
+                        </div>
+                        <div style={{ marginBottom: '12px' }}>
+                          <div style={editLabelStyle}>Target Area</div>
+                          <input className="pu-inline-input" type="text" value={editTarget} onChange={e => setEditTarget(e.target.value)} placeholder="Optional" />
+                        </div>
+                        <div style={{ marginBottom: '16px' }}>
+                          <div style={editLabelStyle}>Count</div>
+                          <input className="pu-inline-input" type="number" value={editCount} onChange={e => setEditCount(e.target.value)} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <button className="pu-delete-btn" onClick={() => deleteSession(session.id)}>Delete</button>
+                          <div>
+                            <button className="pu-cancel-btn" onClick={cancelEdit}>Cancel</button>
+                            <button className="pu-edit-btn" onClick={() => saveEdit(session.id)}>Save</button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div>
-                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25em', color: P.text, fontWeight: 600, marginBottom: '6px' }}>
-                          {session.count} reps
+                    ) : (
+                      <div style={{
+                        background: 'white', borderRadius: '4px', padding: '16px 20px',
+                        border: '1px solid rgba(30,58,138,0.07)',
+                        boxShadow: '0 1px 8px rgba(30,58,138,0.05)',
+                        transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+                      }}
+                        onMouseOver={e => { e.currentTarget.style.boxShadow = '0 2px 16px rgba(30,58,138,0.1)'; e.currentTarget.style.borderColor = 'rgba(30,58,138,0.2)' }}
+                        onMouseOut={e => { e.currentTarget.style.boxShadow = '0 1px 8px rgba(30,58,138,0.05)'; e.currentTarget.style.borderColor = 'rgba(30,58,138,0.07)' }}
+                      >
+                        <div style={{ fontSize: '0.52em', letterSpacing: '2px', color: P.blueMuted, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
+                          {formatUKDate(session.date)}
                         </div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                          <span style={{ color: P.textMuted, fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>{formatUKDate(session.date)}</span>
-                          {session.target && (
-                            <span style={{ color: P.textMuted, fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>{session.target}</span>
-                          )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div>
+                            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: P.text, fontWeight: 600, marginBottom: '6px', lineHeight: 1.1 }}>
+                              {session.count} reps
+                            </div>
+                            {session.target && (
+                              <span style={{ color: P.textMuted, fontSize: '0.62em', letterSpacing: '2px', textTransform: 'uppercase' }}>{session.target}</span>
+                            )}
+                          </div>
+                          <button className="pu-edit-btn" onClick={() => startEdit(session)}>Edit</button>
                         </div>
                       </div>
-                      <button className="pu-edit-btn" onClick={() => startEdit(session)}>Edit</button>
-                    </div>
-                  )}
-                </div>
-              ))
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
