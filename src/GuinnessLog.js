@@ -13,6 +13,62 @@ const G = {
   creamFaint: 'rgba(245,236,215,0.15)',
 }
 
+function GuinnessLineChart({ sessions, formatUKDate }) {
+  const [tooltip, setTooltip] = useState(null)
+  const points = [...sessions]
+    .sort((a, b) => a.date > b.date ? 1 : -1)
+    .map(s => ({ date: formatUKDate(s.date), value: parseInt(s.count) || 0 }))
+
+  if (points.length < 2) return null
+
+  const W = 400, H = 120, padX = 8, padY = 12
+  const maxVal = Math.max(...points.map(p => p.value))
+  const minVal = Math.min(...points.map(p => p.value))
+  const range = maxVal - minVal || 1
+
+  const x = i => padX + (i / (points.length - 1)) * (W - padX * 2)
+  const y = v => padY + (1 - (v - minVal) / range) * (H - padY * 2)
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(p.value)}`).join(' ')
+  const areaPath = `${linePath} L ${x(points.length - 1)} ${H} L ${x(0)} ${H} Z`
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
+        <defs>
+          <linearGradient id="guGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={G.gold} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={G.gold} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill="url(#guGrad)" />
+        <path d={linePath} fill="none" stroke={G.gold} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+        {points.map((p, i) => (
+          <circle
+            key={i} cx={x(i)} cy={y(p.value)} r="3"
+            fill={G.gold} stroke={G.surface} strokeWidth="1.5"
+            style={{ cursor: 'pointer' }}
+            onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, p })}
+            onMouseLeave={() => setTooltip(null)}
+          />
+        ))}
+      </svg>
+      {tooltip && (
+        <div style={{
+          position: 'fixed', left: tooltip.x + 12, top: tooltip.y - 40,
+          background: '#0d0c0b', color: G.cream, padding: '8px 12px',
+          borderRadius: '3px', fontSize: '0.7em', fontFamily: 'Montserrat',
+          letterSpacing: '1px', pointerEvents: 'none', zIndex: 1000,
+          whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+          border: `1px solid ${G.goldFaint}`,
+        }}>
+          {tooltip.p.date} — {tooltip.p.value} pints
+        </div>
+      )}
+    </div>
+  )
+}
+
 const guinnessStyles = `
   @keyframes guFadeUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -295,6 +351,19 @@ export default function GuinnessLog({ onBack }) {
                       {kpi.sub && <div style={{ fontSize: '0.5em', letterSpacing: '1px', color: 'rgba(245,236,215,0.3)', marginTop: '6px', fontFamily: 'Montserrat' }}>{kpi.sub}</div>}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {sessions.length >= 2 && (
+                <div style={{
+                  background: G.surface, border: `1px solid rgba(201,164,82,0.1)`,
+                  borderRadius: '4px', padding: '24px', marginBottom: '28px',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+                }}>
+                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: G.goldMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>
+                    Pints Over Time
+                  </div>
+                  <GuinnessLineChart sessions={sessions} formatUKDate={formatUKDate} />
                 </div>
               )}
 
