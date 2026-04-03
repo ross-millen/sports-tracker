@@ -143,8 +143,8 @@ function PushupBarChart({ entries }) {
   const chartHeight = 160
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', height: `${chartHeight + 40}px`, padding: '0 4px' }}>
+    <div style={{ overflow: 'hidden', width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight + 40}px`, padding: '0 4px' }}>
         {entries.map((entry, i) => {
           const barH = Math.max(8, (entry.value / maxVal) * chartHeight)
           return (
