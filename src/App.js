@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
+import PushupTracker from './PushupTracker'
+import GuinnessLog from './GuinnessLog'
 
 const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
@@ -199,6 +201,7 @@ function BarChart({ data, tooltipFormatter }) {
 }
 
 function App() {
+  const [tracker, setTracker] = useState('sports')
   const [page, setPage] = useState('log')
   const [sportName, setSportName] = useState('')
   const [date, setDate] = useState('')
@@ -332,14 +335,38 @@ function App() {
             fontSize: 'clamp(2.2em, 7vw, 3.5em)',
             fontWeight: 300, color: '#8b0000',
             letterSpacing: '8px', textTransform: 'uppercase', lineHeight: 1,
-          }}>Ross' Sports Tracker</h1>
+          }}>Ross' Tracker</h1>
           <div style={{ width: '40px', height: '1px', background: 'linear-gradient(90deg, transparent, #8b0000, transparent)', margin: '16px auto' }} />
           <p style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.6em', letterSpacing: '5px', textTransform: 'uppercase', fontWeight: 500 }}>
             Performance & Training Log
           </p>
+          <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Pushups', key: 'pushups' },
+              { label: 'Guinness', key: 'guinness' },
+            ].map(item => (
+              <button
+                key={item.key}
+                onClick={() => setTracker(item.key)}
+                style={{
+                  background: 'none', border: '1px solid rgba(139,0,0,0.2)', cursor: 'pointer',
+                  color: 'rgba(80,20,20,0.5)', fontSize: '0.58em', letterSpacing: '3px',
+                  textTransform: 'uppercase', fontFamily: 'Montserrat', fontWeight: 500,
+                  padding: '8px 18px', borderRadius: '2px', transition: 'all 0.3s ease',
+                }}
+                onMouseOver={e => { e.target.style.background = '#8b0000'; e.target.style.color = '#f5f0eb' }}
+                onMouseOut={e => { e.target.style.background = 'none'; e.target.style.color = 'rgba(80,20,20,0.5)' }}
+              >
+                {item.label} →
+              </button>
+            ))}
+          </div>
         </div>
 
         <div style={{ maxWidth: '480px', margin: '0 auto' }}>
+          {tracker === 'pushups' && <PushupTracker onBack={() => setTracker('sports')} />}
+          {tracker === 'guinness' && <GuinnessLog onBack={() => setTracker('sports')} />}
+          {tracker === 'sports' && (<>
 
           {/* Nav */}
           <div className="fade-up-delay" style={{
@@ -520,6 +547,7 @@ function App() {
               )}
             </div>
           )}
+          </>)}
         </div>
       </div>
     </>
