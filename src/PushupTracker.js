@@ -165,9 +165,8 @@ function PushupBarChart({ entries }) {
               />
               <div style={{
                 fontSize: '0.55em', color: '#1a1a1a', marginTop: '8px',
-                fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
-                textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
-                textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700,
+                fontFamily: 'Montserrat', letterSpacing: '0.5px', textTransform: 'uppercase',
+                textAlign: 'center', maxWidth: '100%', wordBreak: 'break-word', fontWeight: 700,
               }}>
                 {entry.label}
               </div>

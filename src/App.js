@@ -279,9 +279,8 @@ function BarChart({ data, tooltipFormatter }) {
               />
               <div style={{
                 fontSize: '0.55em', color: '#1a1a1a', marginTop: '8px', fontWeight: 700,
-                fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
-                textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
-                textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                fontFamily: 'Montserrat', letterSpacing: '0.5px', textTransform: 'uppercase',
+                textAlign: 'center', maxWidth: '100%', wordBreak: 'break-word',
               }}>
                 {name}
               </div>
