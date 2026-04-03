@@ -1,22 +1,142 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 
+const P = {
+  blue: '#1e3a8a',
+  blueLight: '#2563eb',
+  blueMuted: 'rgba(30,58,138,0.4)',
+  blueFaint: 'rgba(30,58,138,0.08)',
+  surface: '#ffffff',
+  surfaceAlt: '#f0f5ff',
+  text: '#0f2044',
+  textMuted: 'rgba(15,32,68,0.45)',
+  textFaint: 'rgba(15,32,68,0.25)',
+}
+
 const pushupStyles = `
+  @keyframes puFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes puShimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  .pu-fade-up { animation: puFadeUp 0.5s ease forwards; }
+  .pu-fade-up-delay { animation: puFadeUp 0.5s ease 0.1s both; }
+  .pu-fade-up-delay-2 { animation: puFadeUp 0.5s ease 0.2s both; }
+
+  .pu-nav-btn {
+    flex: 1; padding: 14px; background: transparent;
+    color: rgba(15,32,68,0.3); border: none; cursor: pointer;
+    font-family: 'Montserrat', sans-serif; font-weight: 500;
+    letter-spacing: 3px; text-transform: uppercase; font-size: 0.68em;
+    transition: all 0.3s ease; position: relative;
+  }
+  .pu-nav-btn:hover { color: #1e3a8a; }
+  .pu-nav-btn.active { color: #1e3a8a; background: rgba(30,58,138,0.05); }
+  .pu-nav-btn.active::after {
+    content: ''; position: absolute; bottom: 0; left: 20%; right: 20%;
+    height: 2px; background: #1e3a8a;
+  }
+
+  .pu-input {
+    width: 100%; padding: 12px 0; background: transparent;
+    border: none; border-bottom: 1px solid rgba(30,58,138,0.2);
+    color: #0f2044; font-family: 'Montserrat', sans-serif;
+    font-size: 0.9em; font-weight: 400; transition: border-color 0.3s ease; outline: none;
+  }
+  .pu-input:focus { border-bottom-color: #2563eb; }
+  .pu-input::placeholder { color: rgba(15,32,68,0.2); font-weight: 300; }
+
+  .pu-inline-input {
+    background: transparent; border: none;
+    border-bottom: 1px solid rgba(30,58,138,0.25); color: #0f2044;
+    font-family: 'Montserrat', sans-serif; font-size: 0.85em;
+    outline: none; padding: 2px 4px; width: 100%; margin-top: 4px;
+  }
+  .pu-inline-input:focus { border-bottom-color: #2563eb; }
+
+  .pu-save-btn {
+    width: 100%; padding: 15px; background: #1e3a8a; color: #f0f5ff;
+    border: none; border-radius: 2px; cursor: pointer;
+    font-family: 'Montserrat', sans-serif; font-weight: 600;
+    font-size: 0.7em; letter-spacing: 4px; text-transform: uppercase;
+    margin-top: 10px; transition: all 0.3s ease;
+  }
+  .pu-save-btn:hover {
+    background: #1e40af; letter-spacing: 5px;
+    box-shadow: 0 4px 20px rgba(30,58,138,0.25);
+  }
+
+  .pu-card {
+    border-left: 2px solid rgba(30,58,138,0.15);
+    padding: 16px 20px; margin-bottom: 12px;
+    transition: all 0.3s ease; background: white;
+    border-radius: 0 4px 4px 0; animation: puFadeUp 0.4s ease forwards;
+  }
+  .pu-card:hover {
+    border-left-color: #2563eb;
+    box-shadow: 0 2px 16px rgba(30,58,138,0.08);
+  }
+
+  .pu-edit-btn {
+    background: none; border: 1px solid rgba(30,58,138,0.25);
+    color: #1e3a8a; padding: 5px 12px; border-radius: 2px;
+    cursor: pointer; font-family: 'Montserrat', sans-serif;
+    font-size: 0.6em; letter-spacing: 2px; text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+  .pu-edit-btn:hover { background: #1e3a8a; color: white; }
+
+  .pu-cancel-btn {
+    background: none; border: 1px solid rgba(15,32,68,0.15);
+    color: rgba(15,32,68,0.4); padding: 5px 12px; border-radius: 2px;
+    cursor: pointer; font-family: 'Montserrat', sans-serif;
+    font-size: 0.6em; letter-spacing: 2px; text-transform: uppercase;
+    transition: all 0.2s ease; margin-right: 8px;
+  }
+  .pu-cancel-btn:hover { background: rgba(15,32,68,0.04); }
+
+  .pu-delete-btn {
+    background: none; border: 1px solid rgba(30,58,138,0.2);
+    color: rgba(30,58,138,0.45); padding: 5px 12px; border-radius: 2px;
+    cursor: pointer; font-family: 'Montserrat', sans-serif;
+    font-size: 0.6em; letter-spacing: 2px; text-transform: uppercase;
+    transition: all 0.2s ease;
+  }
+  .pu-delete-btn:hover { background: #1e3a8a; color: white; border-color: #1e3a8a; }
+
+  .pu-kpi-shimmer {
+    background: linear-gradient(90deg, #1e3a8a, #3b82f6, #1e3a8a);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: puShimmer 3s linear infinite;
+  }
+
   .pu-bar-segment {
     transition: opacity 0.2s ease; cursor: pointer;
   }
   .pu-bar-segment:hover { opacity: 0.75; }
+
+  .pu-tooltip {
+    position: fixed; background: #0f2044; color: white;
+    padding: 8px 12px; border-radius: 3px; font-size: 0.7em;
+    font-family: 'Montserrat', sans-serif; letter-spacing: 1px;
+    pointer-events: none; z-index: 1000; white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
 `
 
-const COLORS = [
-  '#8b0000', '#cc2200', '#e85d04', '#f48c06',
-  '#606c38', '#283618', '#386641', '#1d3557'
+const BAR_COLORS = [
+  '#1e3a8a', '#2563eb', '#3b82f6', '#60a5fa',
+  '#1d4ed8', '#1e40af', '#2e6dbc', '#0ea5e9'
 ]
 
 function PushupBarChart({ entries }) {
   const [tooltip, setTooltip] = useState(null)
   if (entries.length === 0) return (
-    <p style={{ color: 'rgba(80,20,20,0.3)', fontSize: '0.75em', letterSpacing: '2px' }}>Not enough data yet.</p>
+    <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px' }}>Not enough data yet.</p>
   )
 
   const maxVal = Math.max(...entries.map(e => e.value))
@@ -29,22 +149,22 @@ function PushupBarChart({ entries }) {
           const barH = Math.max(8, (entry.value / maxVal) * chartHeight)
           return (
             <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: '0.58em', color: 'rgba(80,20,20,0.5)', marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
+              <div style={{ fontSize: '0.58em', color: P.blueMuted, marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
                 {entry.value}
               </div>
               <div
                 className="pu-bar-segment"
                 style={{
                   width: '100%', height: `${barH}px`,
-                  background: COLORS[i % COLORS.length],
+                  background: BAR_COLORS[i % BAR_COLORS.length],
                   borderRadius: '3px 3px 0 0',
-                  animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
+                  animation: `puFadeUp 0.6s ease ${i * 0.1}s both`,
                 }}
                 onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, entry })}
                 onMouseLeave={() => setTooltip(null)}
               />
               <div style={{
-                fontSize: '0.55em', color: 'rgba(80,20,20,0.5)', marginTop: '8px',
+                fontSize: '0.55em', color: P.textMuted, marginTop: '8px',
                 fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
                 textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
                 textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -56,7 +176,7 @@ function PushupBarChart({ entries }) {
         })}
       </div>
       {tooltip && (
-        <div className="tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
+        <div className="pu-tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
           {tooltip.entry.label} — {tooltip.entry.value} reps{tooltip.entry.target ? ` · ${tooltip.entry.target}` : ''}
         </div>
       )}
@@ -142,13 +262,14 @@ export default function PushupTracker({ onBack }) {
     .map(s => ({ label: formatUKDate(s.date), value: parseInt(s.count) || 0, target: s.target }))
 
   const labelStyle = {
-    fontSize: '0.58em', letterSpacing: '3px', color: 'rgba(80,20,20,0.45)',
-    textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500
+    fontSize: '0.58em', letterSpacing: '3px', color: P.textMuted,
+    textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500,
+    fontFamily: 'Montserrat',
   }
 
   const editLabelStyle = {
-    fontSize: '0.6em', letterSpacing: '2px', color: 'rgba(80,20,20,0.4)',
-    textTransform: 'uppercase', marginBottom: '4px'
+    fontSize: '0.6em', letterSpacing: '2px', color: P.textFaint,
+    textTransform: 'uppercase', marginBottom: '4px', fontFamily: 'Montserrat',
   }
 
   return (
@@ -162,68 +283,71 @@ export default function PushupTracker({ onBack }) {
             onClick={onBack}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: 'rgba(80,20,20,0.45)', fontSize: '0.6em', letterSpacing: '3px',
+              color: P.textMuted, fontSize: '0.6em', letterSpacing: '3px',
               textTransform: 'uppercase', fontFamily: 'Montserrat', fontWeight: 500,
-              padding: 0, display: 'flex', alignItems: 'center', gap: '8px',
+              padding: 0,
             }}
           >
-            ← Sports Tracker
+            ← Ross' Tracker
           </button>
         </div>
 
         {/* Title */}
-        <div className="fade-up" style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <div className="pu-fade-up" style={{ textAlign: 'center', marginBottom: '40px' }}>
           <h2 style={{
             fontFamily: "'Cormorant Garamond', serif",
             fontSize: 'clamp(1.8em, 6vw, 2.8em)',
-            fontWeight: 300, color: '#8b0000',
+            fontWeight: 300, color: P.blue,
             letterSpacing: '6px', textTransform: 'uppercase', lineHeight: 1,
           }}>Pushup Log</h2>
-          <div style={{ width: '40px', height: '1px', background: 'linear-gradient(90deg, transparent, #8b0000, transparent)', margin: '14px auto' }} />
+          <div style={{ width: '40px', height: '1px', background: `linear-gradient(90deg, transparent, ${P.blue}, transparent)`, margin: '14px auto' }} />
+          <p style={{ color: P.textMuted, fontSize: '0.58em', letterSpacing: '4px', textTransform: 'uppercase', fontWeight: 500 }}>
+            Strength & Reps
+          </p>
         </div>
 
         {/* Nav */}
-        <div className="fade-up-delay" style={{
-          display: 'flex', border: '1px solid rgba(139,0,0,0.15)', borderRadius: '2px',
+        <div className="pu-fade-up-delay" style={{
+          display: 'flex', border: '1px solid rgba(30,58,138,0.15)', borderRadius: '2px',
           marginBottom: '40px', overflow: 'hidden', background: 'white',
-          boxShadow: '0 2px 12px rgba(139,0,0,0.06)',
+          boxShadow: '0 2px 12px rgba(30,58,138,0.06)',
         }}>
-          <button className={`nav-btn ${page === 'log' ? 'active' : ''}`} onClick={() => setPage('log')}>Log Session</button>
-          <div style={{ width: '1px', background: 'rgba(139,0,0,0.1)' }} />
-          <button className={`nav-btn ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>History</button>
+          <button className={`pu-nav-btn ${page === 'log' ? 'active' : ''}`} onClick={() => setPage('log')}>Log Session</button>
+          <div style={{ width: '1px', background: 'rgba(30,58,138,0.1)' }} />
+          <button className={`pu-nav-btn ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>History</button>
         </div>
 
         {/* Log Page */}
         {page === 'log' && (
-          <div className="fade-up-delay-2" style={{
+          <div className="pu-fade-up-delay-2" style={{
             background: 'white', borderRadius: '4px', padding: '32px',
-            boxShadow: '0 2px 20px rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.08)',
+            boxShadow: '0 2px 20px rgba(30,58,138,0.06)', border: '1px solid rgba(30,58,138,0.08)',
           }}>
-            <div style={{ fontSize: '0.58em', letterSpacing: '5px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', marginBottom: '28px', fontWeight: 600 }}>New Session</div>
+            <div style={{ fontSize: '0.58em', letterSpacing: '5px', color: P.blueMuted, textTransform: 'uppercase', marginBottom: '28px', fontWeight: 600 }}>New Session</div>
 
             <div style={{ marginBottom: '24px' }}>
               <div style={labelStyle}>Date</div>
-              <input className="input-field" type="date" value={date} onChange={e => setDate(e.target.value)} />
+              <input className="pu-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
             </div>
 
             <div style={{ marginBottom: '24px' }}>
               <div style={labelStyle}>Target Area <span style={{ opacity: 0.5 }}>(optional)</span></div>
-              <input className="input-field" type="text" placeholder="Chest, triceps, shoulders..." value={target} onChange={e => setTarget(e.target.value)} />
+              <input className="pu-input" type="text" placeholder="Chest, triceps, shoulders..." value={target} onChange={e => setTarget(e.target.value)} />
             </div>
 
             <div style={{ marginBottom: '36px' }}>
               <div style={labelStyle}>Count</div>
-              <input className="input-field" type="number" placeholder="82" value={count} onChange={e => setCount(e.target.value)} />
+              <input className="pu-input" type="number" placeholder="82" value={count} onChange={e => setCount(e.target.value)} />
             </div>
 
-            <button className="save-btn" onClick={handleSubmit}>Record Session</button>
+            <button className="pu-save-btn" onClick={handleSubmit}>Record Session</button>
 
             {saved && (
               <div style={{
-                marginTop: '16px', padding: '12px', border: '1px solid rgba(139,0,0,0.15)',
-                borderRadius: '2px', textAlign: 'center', color: '#8b0000',
+                marginTop: '16px', padding: '12px', border: `1px solid rgba(30,58,138,0.15)`,
+                borderRadius: '2px', textAlign: 'center', color: P.blue,
                 fontSize: '0.65em', letterSpacing: '3px', textTransform: 'uppercase',
-                animation: 'fadeUp 0.4s ease', background: 'rgba(139,0,0,0.03)',
+                animation: 'puFadeUp 0.4s ease', background: P.blueFaint,
               }}>✦ Session Recorded</div>
             )}
           </div>
@@ -231,8 +355,8 @@ export default function PushupTracker({ onBack }) {
 
         {/* History Page */}
         {page === 'history' && (
-          <div className="fade-up-delay-2">
-            <div style={{ fontSize: '0.58em', letterSpacing: '5px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', marginBottom: '24px', fontWeight: 600 }}>Session Archive</div>
+          <div className="pu-fade-up-delay-2">
+            <div style={{ fontSize: '0.58em', letterSpacing: '5px', color: P.blueMuted, textTransform: 'uppercase', marginBottom: '24px', fontWeight: 600 }}>Session Archive</div>
 
             {sessions.length > 0 && (
               <>
@@ -244,22 +368,22 @@ export default function PushupTracker({ onBack }) {
                     { label: 'Best Set', value: bestSet },
                   ].map(kpi => (
                     <div key={kpi.label} style={{
-                      padding: '16px 12px', background: 'white', border: '1px solid rgba(139,0,0,0.1)',
-                      borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(139,0,0,0.05)',
+                      padding: '16px 12px', background: 'white', border: '1px solid rgba(30,58,138,0.1)',
+                      borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(30,58,138,0.05)',
                     }}>
-                      <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: 'rgba(80,20,20,0.35)', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500 }}>{kpi.label}</div>
-                      <div className="kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600 }}>{kpi.value}</div>
+                      <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: P.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
+                      <div className="pu-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600 }}>{kpi.value}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Count chart */}
                 <div style={{
-                  background: 'white', border: '1px solid rgba(139,0,0,0.08)',
+                  background: 'white', border: '1px solid rgba(30,58,138,0.08)',
                   borderRadius: '4px', padding: '24px', marginBottom: '28px',
-                  boxShadow: '0 2px 12px rgba(139,0,0,0.05)',
+                  boxShadow: '0 2px 12px rgba(30,58,138,0.05)',
                 }}>
-                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
+                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
                     Reps per Session
                   </div>
                   <PushupBarChart entries={chartEntries} />
@@ -269,51 +393,51 @@ export default function PushupTracker({ onBack }) {
 
             {/* Session list */}
             {sessions.length === 0 ? (
-              <p style={{ color: 'rgba(80,20,20,0.3)', fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
+              <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
             ) : (
               sessions.map((session, i) => (
-                <div key={session.id} className="session-card" style={{ animationDelay: `${i * 0.07}s` }}>
+                <div key={session.id} className="pu-card" style={{ animationDelay: `${i * 0.07}s` }}>
                   {editingId === session.id ? (
                     <div>
-                      <div style={{ fontSize: '0.58em', letterSpacing: '2px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', marginBottom: '12px', fontWeight: 500 }}>Editing</div>
+                      <div style={{ fontSize: '0.58em', letterSpacing: '2px', color: P.blueMuted, textTransform: 'uppercase', marginBottom: '12px', fontWeight: 500 }}>Editing</div>
 
                       <div style={{ marginBottom: '12px' }}>
                         <div style={editLabelStyle}>Date</div>
-                        <input className="inline-input" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
+                        <input className="pu-inline-input" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
                       </div>
 
                       <div style={{ marginBottom: '12px' }}>
                         <div style={editLabelStyle}>Target Area</div>
-                        <input className="inline-input" type="text" value={editTarget} onChange={e => setEditTarget(e.target.value)} placeholder="Optional" />
+                        <input className="pu-inline-input" type="text" value={editTarget} onChange={e => setEditTarget(e.target.value)} placeholder="Optional" />
                       </div>
 
                       <div style={{ marginBottom: '16px' }}>
                         <div style={editLabelStyle}>Count</div>
-                        <input className="inline-input" type="number" value={editCount} onChange={e => setEditCount(e.target.value)} />
+                        <input className="pu-inline-input" type="number" value={editCount} onChange={e => setEditCount(e.target.value)} />
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <button className="delete-btn" onClick={() => deleteSession(session.id)}>Delete</button>
+                        <button className="pu-delete-btn" onClick={() => deleteSession(session.id)}>Delete</button>
                         <div>
-                          <button className="cancel-btn" onClick={cancelEdit}>Cancel</button>
-                          <button className="edit-btn" onClick={() => saveEdit(session.id)}>Save</button>
+                          <button className="pu-cancel-btn" onClick={cancelEdit}>Cancel</button>
+                          <button className="pu-edit-btn" onClick={() => saveEdit(session.id)}>Save</button>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25em', color: '#2a0a0a', fontWeight: 600, marginBottom: '6px' }}>
+                        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.25em', color: P.text, fontWeight: 600, marginBottom: '6px' }}>
                           {session.count} reps
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                          <span style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>{formatUKDate(session.date)}</span>
+                          <span style={{ color: P.textMuted, fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>{formatUKDate(session.date)}</span>
                           {session.target && (
-                            <span style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>{session.target}</span>
+                            <span style={{ color: P.textMuted, fontSize: '0.65em', letterSpacing: '2px', textTransform: 'uppercase' }}>{session.target}</span>
                           )}
                         </div>
                       </div>
-                      <button className="edit-btn" onClick={() => startEdit(session)}>Edit</button>
+                      <button className="pu-edit-btn" onClick={() => startEdit(session)}>Edit</button>
                     </div>
                   )}
                 </div>
