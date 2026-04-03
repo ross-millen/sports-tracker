@@ -332,7 +332,7 @@ function App() {
             fontSize: 'clamp(2.2em, 7vw, 3.5em)',
             fontWeight: 300, color: '#8b0000',
             letterSpacing: '8px', textTransform: 'uppercase', lineHeight: 1,
-          }}>Sports Tracker</h1>
+          }}>Ross' Sports Tracker</h1>
           <div style={{ width: '40px', height: '1px', background: 'linear-gradient(90deg, transparent, #8b0000, transparent)', margin: '16px auto' }} />
           <p style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.6em', letterSpacing: '5px', textTransform: 'uppercase', fontWeight: 500 }}>
             Performance & Training Log
