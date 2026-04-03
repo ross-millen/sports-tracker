@@ -164,10 +164,10 @@ function PushupBarChart({ entries }) {
                 onMouseLeave={() => setTooltip(null)}
               />
               <div style={{
-                fontSize: '0.55em', color: P.textMuted, marginTop: '8px',
+                fontSize: '0.55em', color: '#1a1a1a', marginTop: '8px',
                 fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
                 textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
-                textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700, color: '#1a1a1a',
+                textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700,
               }}>
                 {entry.label}
               </div>
