@@ -184,7 +184,9 @@ export default function GuinnessLog({ onBack }) {
   }
 
   const totalPints = sessions.reduce((sum, s) => sum + (parseInt(s.count) || 0), 0)
-  const bestSession = sessions.reduce((max, s) => Math.max(max, parseInt(s.count) || 0), 0)
+  const bestSessionEntry = sessions.reduce((best, s) => (parseInt(s.count) || 0) > (parseInt(best?.count) || 0) ? s : best, null)
+  const bestSession = bestSessionEntry?.count || 0
+  const bestSessionDate = bestSessionEntry ? formatUKDate(bestSessionEntry.date) : ''
 
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: G.creamMuted,
@@ -282,7 +284,7 @@ export default function GuinnessLog({ onBack }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '28px' }}>
                   {[
                     { label: 'Total Pints', value: totalPints },
-                    { label: 'Best Session', value: bestSession },
+                    { label: 'Best Session', value: bestSession, sub: bestSessionDate },
                   ].map(kpi => (
                     <div key={kpi.label} style={{
                       padding: '20px', background: G.surface, border: `1px solid rgba(201,164,82,0.12)`,
@@ -290,6 +292,7 @@ export default function GuinnessLog({ onBack }) {
                     }}>
                       <div style={{ fontSize: '0.55em', letterSpacing: '2px', color: 'rgba(245,236,215,0.3)', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
                       <div className="gu-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.9em', fontWeight: 600 }}>{kpi.value}</div>
+                      {kpi.sub && <div style={{ fontSize: '0.5em', letterSpacing: '1px', color: 'rgba(245,236,215,0.3)', marginTop: '6px', fontFamily: 'Montserrat' }}>{kpi.sub}</div>}
                     </div>
                   ))}
                 </div>

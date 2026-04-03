@@ -254,12 +254,42 @@ export default function PushupTracker({ onBack }) {
   }
 
   const totalReps = sessions.reduce((sum, s) => sum + (parseInt(s.count) || 0), 0)
-  const bestSet = sessions.reduce((max, s) => Math.max(max, parseInt(s.count) || 0), 0)
+  const bestSetSession = sessions.reduce((best, s) => (parseInt(s.count) || 0) > (parseInt(best?.count) || 0) ? s : best, null)
+  const bestSet = bestSetSession?.count || 0
+  const bestSetDate = bestSetSession ? formatUKDate(bestSetSession.date) : ''
 
-  const chartEntries = [...sessions]
-    .sort((a, b) => a.date > b.date ? 1 : -1)
-    .slice(-10)
-    .map(s => ({ label: formatUKDate(s.date), value: parseInt(s.count) || 0, target: s.target }))
+  const uniqueDates = [...new Set(sessions.map(s => s.date))].sort((a, b) => b > a ? 1 : -1)
+  const localDate = (offset = 0) => {
+    const d = new Date(); d.setDate(d.getDate() + offset)
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  }
+  const today = localDate(0)
+  const yesterday = localDate(-1)
+  let streak = 0
+  if (uniqueDates.length && (uniqueDates[0] === today || uniqueDates[0] === yesterday)) {
+    let cur = new Date(uniqueDates[0] + 'T12:00:00')
+    for (const d of uniqueDates) {
+      const curStr = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`
+      if (d === curStr) {
+        streak++
+        cur.setDate(cur.getDate() - 1)
+      } else break
+    }
+  }
+
+  const byTarget = {}
+  sessions.forEach(s => {
+    const key = s.target || 'Unspecified'
+    if (!byTarget[key]) byTarget[key] = { reps: 0, sessions: 0 }
+    byTarget[key].reps += parseInt(s.count) || 0
+    byTarget[key].sessions += 1
+  })
+  const repsByTarget = Object.entries(byTarget)
+    .sort((a, b) => b[1].reps - a[1].reps)
+    .map(([label, v]) => ({ label, value: v.reps }))
+  const sessionsByTarget = Object.entries(byTarget)
+    .sort((a, b) => b[1].sessions - a[1].sessions)
+    .map(([label, v]) => ({ label, value: v.sessions }))
 
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: P.textMuted,
@@ -301,9 +331,6 @@ export default function PushupTracker({ onBack }) {
             letterSpacing: '6px', textTransform: 'uppercase', lineHeight: 1,
           }}>Pushup Log</h2>
           <div style={{ width: '40px', height: '1px', background: `linear-gradient(90deg, transparent, ${P.blue}, transparent)`, margin: '14px auto' }} />
-          <p style={{ color: P.textMuted, fontSize: '0.58em', letterSpacing: '4px', textTransform: 'uppercase', fontWeight: 500 }}>
-            Strength & Reps
-          </p>
         </div>
 
         {/* Nav */}
@@ -361,11 +388,12 @@ export default function PushupTracker({ onBack }) {
             {sessions.length > 0 && (
               <>
                 {/* KPIs */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
                   {[
                     { label: 'Total Reps', value: totalReps.toLocaleString() },
                     { label: 'Sessions', value: sessions.length },
-                    { label: 'Best Set', value: bestSet },
+                    { label: 'Best Set', value: bestSet, sub: bestSetDate },
+                    { label: 'Day Streak', value: streak },
                   ].map(kpi => (
                     <div key={kpi.label} style={{
                       padding: '16px 12px', background: 'white', border: '1px solid rgba(30,58,138,0.1)',
@@ -373,6 +401,7 @@ export default function PushupTracker({ onBack }) {
                     }}>
                       <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: P.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
                       <div className="pu-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600 }}>{kpi.value}</div>
+                      {kpi.sub && <div style={{ fontSize: '0.5em', letterSpacing: '1px', color: P.textFaint, marginTop: '6px', fontFamily: 'Montserrat' }}>{kpi.sub}</div>}
                     </div>
                   ))}
                 </div>
@@ -384,9 +413,20 @@ export default function PushupTracker({ onBack }) {
                   boxShadow: '0 2px 12px rgba(30,58,138,0.05)',
                 }}>
                   <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
-                    Reps per Session
+                    Reps by Target Area
                   </div>
-                  <PushupBarChart entries={chartEntries} />
+                  <PushupBarChart entries={repsByTarget} />
+                </div>
+
+                <div style={{
+                  background: 'white', border: '1px solid rgba(30,58,138,0.08)',
+                  borderRadius: '4px', padding: '24px', marginBottom: '28px',
+                  boxShadow: '0 2px 12px rgba(30,58,138,0.05)',
+                }}>
+                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
+                    Sessions by Target Area
+                  </div>
+                  <PushupBarChart entries={sessionsByTarget} />
                 </div>
               </>
             )}
