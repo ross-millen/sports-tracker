@@ -129,9 +129,100 @@ const pushupStyles = `
 `
 
 const BAR_COLORS = [
-  '#6b8fc4', '#7aaad4', '#85b4d4', '#90bfcd',
+  '#1e3a8a', '#7aaad4', '#85b4d4', '#90bfcd',
   '#7a9ec4', '#8aaabf', '#7ab0c9', '#80b8d4'
 ]
+
+function PushupDonutChart({ entries }) {
+  const [tooltip, setTooltip] = useState(null)
+  if (entries.length === 0) return (
+    <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px' }}>Not enough data yet.</p>
+  )
+
+  const total = entries.reduce((s, e) => s + e.value, 0)
+  const R = 80, cx = 110, cy = 95, stroke = 28
+  let cumAngle = -Math.PI / 2
+
+  const slices = entries.map((entry, i) => {
+    const frac = entry.value / total
+    const angle = frac * 2 * Math.PI
+    const startAngle = cumAngle
+    cumAngle += angle
+    return { label: entry.label, value: entry.value, color: BAR_COLORS[i % BAR_COLORS.length], startAngle, endAngle: cumAngle, frac }
+  })
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+        <svg viewBox="0 0 220 190" style={{ width: '180px', flexShrink: 0 }}>
+          {slices.map((s, i) => {
+            const x1 = cx + R * Math.cos(s.startAngle)
+            const y1 = cy + R * Math.sin(s.startAngle)
+            const x2 = cx + R * Math.cos(s.endAngle)
+            const y2 = cy + R * Math.sin(s.endAngle)
+            const large = s.frac > 0.5 ? 1 : 0
+            return (
+              <path
+                key={i}
+                d={`M ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2}`}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={stroke}
+                strokeLinecap="butt"
+                style={{ cursor: 'pointer', transition: 'opacity 0.2s ease' }}
+                onMouseOver={e => { e.target.style.opacity = '0.8' }}
+                onMouseOut={e => { e.target.style.opacity = '1' }}
+                onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, s })}
+                onMouseLeave={() => setTooltip(null)}
+              />
+            )
+          })}
+          {slices.map((s, i) => {
+            const inner = R - stroke / 2, outer = R + stroke / 2
+            return (
+              <line key={i}
+                x1={cx + inner * Math.cos(s.startAngle)} y1={cy + inner * Math.sin(s.startAngle)}
+                x2={cx + outer * Math.cos(s.startAngle)} y2={cy + outer * Math.sin(s.startAngle)}
+                stroke="black" strokeWidth="1.5"
+              />
+            )
+          })}
+          <circle cx={cx} cy={cy} r={R - stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
+          <circle cx={cx} cy={cy} r={R + stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
+          <text x={cx} y={cy - 8} textAnchor="middle" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', fill: P.text, fontWeight: 600 }}>
+            {total.toLocaleString()}
+          </text>
+          <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontFamily: 'Montserrat', fontSize: '7px', fill: P.text, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700 }}>
+            REPS
+          </text>
+        </svg>
+
+        {/* Legend */}
+        <div style={{ flex: 1, minWidth: '100px' }}>
+          {slices.map((s, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: s.color, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.7em', color: P.text, fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>{s.label}</div>
+                <div style={{ fontSize: '0.5em', color: P.textMuted, letterSpacing: '1px', fontFamily: 'Montserrat' }}>
+                  {s.value.toLocaleString()} reps
+                </div>
+              </div>
+              <div style={{ fontSize: '0.6em', color: P.textMuted, fontFamily: 'Montserrat', fontWeight: 600 }}>
+                {Math.round(s.frac * 100)}%
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {tooltip && (
+        <div className="pu-tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
+          {tooltip.s.label} — {tooltip.s.value.toLocaleString()} reps
+        </div>
+      )}
+    </div>
+  )
+}
 
 function PushupBarChart({ entries }) {
   const [tooltip, setTooltip] = useState(null)
@@ -415,7 +506,7 @@ export default function PushupTracker({ onBack }) {
                   <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
                     Reps by Target Area
                   </div>
-                  <PushupBarChart entries={repsByTarget} />
+                  <PushupDonutChart entries={repsByTarget} />
                 </div>
 
                 <div style={{
