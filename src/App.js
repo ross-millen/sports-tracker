@@ -173,7 +173,7 @@ function DonutChart({ data }) {
   return (
     <div style={{ position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-        <svg viewBox="0 0 220 190" style={{ width: 'min(180px, 45vw)', flexShrink: 0 }}>
+        <svg viewBox="0 0 220 190" style={{ width: '180px', flexShrink: 0 }}>
           {slices.map((s, i) => {
             const startAngle = i === 0 ? -Math.PI / 2 : slices.slice(0, i).reduce((a, sl) => a + sl.frac * 2 * Math.PI, -Math.PI / 2)
             const endAngle = startAngle + s.frac * 2 * Math.PI
@@ -255,9 +255,8 @@ function BarChart({ data, tooltipFormatter }) {
   const chartHeight = 160
 
   return (
-    <div style={{ overflow: 'hidden', width: '100%' }}>
-      {/* Bars */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight + 28}px`, padding: '0 4px' }}>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', height: `${chartHeight + 40}px`, padding: '0 4px' }}>
         {entries.map(([name, data], i) => {
           const val = data.minutes || 0
           const barH = Math.max(8, (val / maxVal) * chartHeight)
@@ -278,21 +277,17 @@ function BarChart({ data, tooltipFormatter }) {
                 onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, name, data })}
                 onMouseLeave={() => setTooltip(null)}
               />
+              <div style={{
+                fontSize: '0.55em', color: '#1a1a1a', marginTop: '8px', fontWeight: 700,
+                fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
+                textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
+                textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {name}
+              </div>
             </div>
           )
         })}
-      </div>
-      {/* Labels row */}
-      <div style={{ display: 'flex', gap: '6px', padding: '0 4px', marginTop: '8px' }}>
-        {entries.map(([name], i) => (
-          <div key={name} style={{
-            flex: 1, fontSize: '0.55em', color: '#1a1a1a', fontWeight: 700,
-            fontFamily: 'Montserrat', letterSpacing: '0.5px', textTransform: 'uppercase',
-            textAlign: 'center', wordBreak: 'break-word',
-          }}>
-            {name}
-          </div>
-        ))}
       </div>
       {tooltip && (
         <div className="tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
@@ -429,16 +424,15 @@ function App() {
         background: 'linear-gradient(160deg, #f5f0eb 0%, #ede4d8 100%)',
         padding: '0 20px 60px',
         fontFamily: "'Montserrat', sans-serif",
-        overflowX: 'hidden',
       }}>
 
         {/* Header */}
-        <div className="fade-up" style={{ textAlign: 'center', padding: 'clamp(24px, 6vw, 50px) 0 40px' }}>
+        <div className="fade-up" style={{ textAlign: 'center', padding: '50px 0 40px' }}>
           <h1 style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontSize: 'clamp(1.8em, 7vw, 3.5em)',
+            fontSize: 'clamp(2.2em, 7vw, 3.5em)',
             fontWeight: 300, color: '#8b0000',
-            letterSpacing: 'clamp(3px, 2vw, 8px)', textTransform: 'uppercase', lineHeight: 1,
+            letterSpacing: '8px', textTransform: 'uppercase', lineHeight: 1,
           }}>Ross' Tracker</h1>
           <div style={{ width: '40px', height: '1px', background: 'linear-gradient(90deg, transparent, #8b0000, transparent)', margin: '16px auto' }} />
           <p style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.6em', letterSpacing: '5px', textTransform: 'uppercase', fontWeight: 500 }}>
