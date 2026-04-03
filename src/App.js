@@ -256,7 +256,8 @@ function BarChart({ data, tooltipFormatter }) {
 
   return (
     <div style={{ overflow: 'hidden', width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight + 40}px`, padding: '0 4px' }}>
+      {/* Bars */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight + 28}px`, padding: '0 4px' }}>
         {entries.map(([name, data], i) => {
           const val = data.minutes || 0
           const barH = Math.max(8, (val / maxVal) * chartHeight)
@@ -277,16 +278,21 @@ function BarChart({ data, tooltipFormatter }) {
                 onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, name, data })}
                 onMouseLeave={() => setTooltip(null)}
               />
-              <div style={{
-                fontSize: '0.55em', color: '#1a1a1a', marginTop: '8px', fontWeight: 700,
-                fontFamily: 'Montserrat', letterSpacing: '0.5px', textTransform: 'uppercase',
-                textAlign: 'center', maxWidth: '100%', wordBreak: 'break-word',
-              }}>
-                {name}
-              </div>
             </div>
           )
         })}
+      </div>
+      {/* Labels row */}
+      <div style={{ display: 'flex', gap: '6px', padding: '0 4px', marginTop: '8px' }}>
+        {entries.map(([name], i) => (
+          <div key={name} style={{
+            flex: 1, fontSize: '0.55em', color: '#1a1a1a', fontWeight: 700,
+            fontFamily: 'Montserrat', letterSpacing: '0.5px', textTransform: 'uppercase',
+            textAlign: 'center', wordBreak: 'break-word',
+          }}>
+            {name}
+          </div>
+        ))}
       </div>
       {tooltip && (
         <div className="tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>

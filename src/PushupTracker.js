@@ -144,7 +144,8 @@ function PushupBarChart({ entries }) {
 
   return (
     <div style={{ overflow: 'hidden', width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight + 40}px`, padding: '0 4px' }}>
+      {/* Bars */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: `${chartHeight + 28}px`, padding: '0 4px' }}>
         {entries.map((entry, i) => {
           const barH = Math.max(8, (entry.value / maxVal) * chartHeight)
           return (
@@ -163,16 +164,21 @@ function PushupBarChart({ entries }) {
                 onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, entry })}
                 onMouseLeave={() => setTooltip(null)}
               />
-              <div style={{
-                fontSize: '0.55em', color: '#1a1a1a', marginTop: '8px',
-                fontFamily: 'Montserrat', letterSpacing: '0.5px', textTransform: 'uppercase',
-                textAlign: 'center', maxWidth: '100%', wordBreak: 'break-word', fontWeight: 700,
-              }}>
-                {entry.label}
-              </div>
             </div>
           )
         })}
+      </div>
+      {/* Labels row */}
+      <div style={{ display: 'flex', gap: '6px', padding: '0 4px', marginTop: '8px' }}>
+        {entries.map((entry, i) => (
+          <div key={i} style={{
+            flex: 1, fontSize: '0.55em', color: '#1a1a1a', fontWeight: 700,
+            fontFamily: 'Montserrat', letterSpacing: '0.5px', textTransform: 'uppercase',
+            textAlign: 'center', wordBreak: 'break-word',
+          }}>
+            {entry.label}
+          </div>
+        ))}
       </div>
       {tooltip && (
         <div className="pu-tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
