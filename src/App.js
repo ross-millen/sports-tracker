@@ -325,26 +325,59 @@ function BubbleChart({ data }) {
 
   const entries = Object.values(data).sort((a, b) => b.minutes - a.minutes)
   const maxMins = entries.length > 0 ? entries[0].minutes : 1
-  const sizes = entries.map(e => Math.round(90 + Math.sqrt(e.minutes / maxMins) * 50))
+  // Min 110px so even long labels like "Whitechapel" fit on one line at the base font size
+  const sizes = entries.map(e => Math.round(110 + Math.sqrt(e.minutes / maxMins) * 40))
   const sizesRef = useRef(sizes)
   sizesRef.current = sizes
+
+  const resolveCollisions = (bs, W2, H2) => {
+    const n = bs.length
+    // Multiple passes per call to fully separate dense packing
+    for (let pass = 0; pass < 5; pass++) {
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const ri = sizesRef.current[i] / 2
+          const rj = sizesRef.current[j] / 2
+          const dx = (bs[j].x + rj) - (bs[i].x + ri)
+          const dy = (bs[j].y + rj) - (bs[i].y + ri)
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
+          const minDist = ri + rj
+          if (dist < minDist) {
+            const nx = dx / dist, ny = dy / dist
+            const push = (minDist - dist) / 2
+            bs[i].x -= nx * push; bs[i].y -= ny * push
+            bs[j].x += nx * push; bs[j].y += ny * push
+            // Re-clamp to walls after separation
+            const di = sizesRef.current[i], dj = sizesRef.current[j]
+            bs[i].x = Math.max(0, Math.min(W2 - di, bs[i].x))
+            bs[i].y = Math.max(0, Math.min(H2 - di, bs[i].y))
+            bs[j].x = Math.max(0, Math.min(W2 - dj, bs[j].x))
+            bs[j].y = Math.max(0, Math.min(H2 - dj, bs[j].y))
+          }
+        }
+      }
+    }
+  }
 
   useEffect(() => {
     if (!containerRef.current || entries.length === 0) return
     const W = containerRef.current.offsetWidth
-    const H = 280
+    const H = 300
     stateRef.current = entries.map((_, i) => {
       const d = sizesRef.current[i]
       return {
         x: Math.random() * Math.max(1, W - d),
         y: Math.random() * Math.max(1, H - d),
-        vx: (Math.random() - 0.5) * 0.6,
-        vy: (Math.random() - 0.5) * 0.6,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
       }
     })
+    // Resolve initial overlaps before animation starts
+    resolveCollisions(stateRef.current, W, H)
+
     const tick = () => {
       const W2 = containerRef.current ? containerRef.current.offsetWidth : W
-      const H2 = 280
+      const H2 = 300
       const bs = stateRef.current.map(b => ({ ...b }))
       const n = bs.length
 
@@ -353,28 +386,29 @@ function BubbleChart({ data }) {
 
       // Wall collisions
       for (let i = 0; i < n; i++) {
-        const d = sizesRef.current[i] || 90
+        const d = sizesRef.current[i]
         if (bs[i].x <= 0) { bs[i].x = 0; bs[i].vx = Math.abs(bs[i].vx) }
         if (bs[i].x + d >= W2) { bs[i].x = W2 - d; bs[i].vx = -Math.abs(bs[i].vx) }
         if (bs[i].y <= 0) { bs[i].y = 0; bs[i].vy = Math.abs(bs[i].vy) }
         if (bs[i].y + d >= H2) { bs[i].y = H2 - d; bs[i].vy = -Math.abs(bs[i].vy) }
       }
 
-      // Bubble-bubble collisions
+      // Bubble-bubble collisions with velocity exchange
       for (let i = 0; i < n; i++) {
         for (let j = i + 1; j < n; j++) {
-          const ri = (sizesRef.current[i] || 90) / 2
-          const rj = (sizesRef.current[j] || 90) / 2
-          const cxi = bs[i].x + ri, cyi = bs[i].y + ri
-          const cxj = bs[j].x + rj, cyj = bs[j].y + rj
-          const dx = cxj - cxi, dy = cyj - cyi
-          const dist = Math.sqrt(dx * dx + dy * dy)
+          const ri = sizesRef.current[i] / 2
+          const rj = sizesRef.current[j] / 2
+          const dx = (bs[j].x + rj) - (bs[i].x + ri)
+          const dy = (bs[j].y + rj) - (bs[i].y + ri)
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
           const minDist = ri + rj
-          if (dist < minDist && dist > 0.01) {
+          if (dist < minDist) {
             const nx = dx / dist, ny = dy / dist
-            const overlap = (minDist - dist) / 2
-            bs[i].x -= nx * overlap; bs[i].y -= ny * overlap
-            bs[j].x += nx * overlap; bs[j].y += ny * overlap
+            // Fully separate
+            const push = (minDist - dist) / 2
+            bs[i].x -= nx * push; bs[i].y -= ny * push
+            bs[j].x += nx * push; bs[j].y += ny * push
+            // Elastic velocity exchange along normal
             const dvn = (bs[j].vx - bs[i].vx) * nx + (bs[j].vy - bs[i].vy) * ny
             if (dvn < 0) {
               bs[i].vx += dvn * nx; bs[i].vy += dvn * ny
@@ -396,10 +430,11 @@ function BubbleChart({ data }) {
   if (entries.length === 0) return null
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', height: '280px', overflow: 'hidden', borderRadius: '4px' }}>
+    <div ref={containerRef} style={{ position: 'relative', height: '300px', overflow: 'hidden', borderRadius: '4px' }}>
       {entries.map((e, i) => {
         const pos = positions[i] || { x: 0, y: 0 }
         const d = sizes[i]
+        const fontSize = Math.max(9, Math.floor(d * 0.11))
         return (
           <div
             key={e.label}
@@ -413,22 +448,22 @@ function BubbleChart({ data }) {
               alignItems: 'center', justifyContent: 'center',
               opacity: 0.92,
               boxShadow: '0 6px 20px rgba(0,0,0,0.13)',
-              cursor: 'default',
-              userSelect: 'none',
+              cursor: 'default', userSelect: 'none',
             }}
             onMouseMove={ev => setTooltip({ x: ev.clientX, y: ev.clientY, e })}
             onMouseLeave={() => setTooltip(null)}
           >
             <div style={{
-              fontSize: `${Math.max(9, Math.floor(d * 0.11))}px`,
+              fontSize: `${fontSize}px`,
               color: 'white', fontFamily: 'Montserrat', fontWeight: 700,
               letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1.25,
-              maxWidth: `${Math.floor(d * 0.72)}px`, wordBreak: 'break-word',
+              maxWidth: `${Math.floor(d * 0.78)}px`,
+              overflowWrap: 'break-word',
             }}>
               {e.label}
             </div>
             <div style={{
-              fontSize: `${Math.max(6, Math.floor(d * 0.11))}px`,
+              fontSize: `${Math.max(7, Math.floor(fontSize * 0.8))}px`,
               color: 'rgba(255,255,255,0.75)', fontFamily: 'Montserrat',
               letterSpacing: '0.5px', marginTop: '3px',
             }}>
