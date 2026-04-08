@@ -370,17 +370,18 @@ export default function PushupTracker({ onBack }) {
 
   const byTarget = {}
   sessions.forEach(s => {
-    const key = s.target || 'Unspecified'
-    if (!byTarget[key]) byTarget[key] = { reps: 0, sessions: 0 }
+    const raw = s.target ? s.target.trim() : ''
+    const key = raw.toLowerCase() || 'unspecified'
+    if (!byTarget[key]) byTarget[key] = { label: raw || 'Unspecified', reps: 0, sessions: 0 }
     byTarget[key].reps += parseInt(s.count) || 0
     byTarget[key].sessions += 1
   })
-  const repsByTarget = Object.entries(byTarget)
-    .sort((a, b) => b[1].reps - a[1].reps)
-    .map(([label, v]) => ({ label, value: v.reps }))
-  const sessionsByTarget = Object.entries(byTarget)
-    .sort((a, b) => b[1].sessions - a[1].sessions)
-    .map(([label, v]) => ({ label, value: v.sessions }))
+  const repsByTarget = Object.values(byTarget)
+    .sort((a, b) => b.reps - a.reps)
+    .map(v => ({ label: v.label, value: v.reps }))
+  const sessionsByTarget = Object.values(byTarget)
+    .sort((a, b) => b.sessions - a.sessions)
+    .map(v => ({ label: v.label, value: v.sessions }))
 
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: P.textMuted,
