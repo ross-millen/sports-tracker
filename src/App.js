@@ -359,6 +359,7 @@ function BubbleChart({ data }) {
     }
     animRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(animRef.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries.length])
 
   if (entries.length === 0) return null
