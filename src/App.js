@@ -325,14 +325,14 @@ function BubbleChart({ data }) {
 
   const entries = Object.values(data).sort((a, b) => b.minutes - a.minutes)
   const maxMins = entries.length > 0 ? entries[0].minutes : 1
-  const sizes = entries.map(e => Math.round(44 + Math.sqrt(e.minutes / maxMins) * 54))
+  const sizes = entries.map(e => Math.round(80 + Math.sqrt(e.minutes / maxMins) * 50))
   const sizesRef = useRef(sizes)
   sizesRef.current = sizes
 
   useEffect(() => {
     if (!containerRef.current || entries.length === 0) return
     const W = containerRef.current.offsetWidth
-    const H = 240
+    const H = 280
     stateRef.current = entries.map((_, i) => {
       const d = sizesRef.current[i]
       return {
@@ -351,7 +351,7 @@ function BubbleChart({ data }) {
         if (x <= 0) { x = 0; vx = Math.abs(vx) * (0.85 + Math.random() * 0.3) }
         if (x + d >= W2) { x = W2 - d; vx = -Math.abs(vx) * (0.85 + Math.random() * 0.3) }
         if (y <= 0) { y = 0; vy = Math.abs(vy) * (0.85 + Math.random() * 0.3) }
-        if (y + d >= H) { y = H - d; vy = -Math.abs(vy) * (0.85 + Math.random() * 0.3) }
+        if (y + d >= 280) { y = 280 - d; vy = -Math.abs(vy) * (0.85 + Math.random() * 0.3) }
         return { x, y, vx, vy }
       })
       setPositions(stateRef.current.map(b => ({ x: b.x, y: b.y })))
@@ -365,7 +365,7 @@ function BubbleChart({ data }) {
   if (entries.length === 0) return null
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', height: '240px', overflow: 'hidden', borderRadius: '4px' }}>
+    <div ref={containerRef} style={{ position: 'relative', height: '280px', overflow: 'hidden', borderRadius: '4px' }}>
       {entries.map((e, i) => {
         const pos = positions[i] || { x: 0, y: 0 }
         const d = sizes[i]
@@ -389,10 +389,10 @@ function BubbleChart({ data }) {
             onMouseLeave={() => setTooltip(null)}
           >
             <div style={{
-              fontSize: `${Math.max(7, Math.floor(d * 0.14))}px`,
+              fontSize: `${Math.max(9, Math.floor(d * 0.13))}px`,
               color: 'white', fontFamily: 'Montserrat', fontWeight: 700,
               letterSpacing: '0.5px', textAlign: 'center',
-              padding: '0 6px', lineHeight: 1.2, wordBreak: 'break-word', maxWidth: '90%',
+              padding: '0 8px', lineHeight: 1.2, whiteSpace: 'nowrap',
             }}>
               {e.label}
             </div>
