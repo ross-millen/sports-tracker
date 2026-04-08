@@ -162,7 +162,8 @@ function DonutChart({ data }) {
   const R = 80, cx = 110, cy = 95, stroke = 28
   let cumAngle = -Math.PI / 2
 
-  const slices = entries.map(([name, val], i) => {
+  const slices = entries.map(([key, val], i) => {
+    const name = val.label || key
     const frac = val.minutes / total
     const angle = frac * 2 * Math.PI
     const x1 = cx + R * Math.cos(cumAngle)
@@ -262,12 +263,13 @@ function BarChart({ data, tooltipFormatter, scrollable }) {
 
   const bars = (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', height: `${chartHeight + 40}px`, padding: '0 4px', minWidth: scrollable ? entries.length * (barMinWidth + 10) : undefined }}>
-      {entries.map(([name, data], i) => {
+      {entries.map(([key, data], i) => {
+        const name = data.label || key
         const val = data.minutes || 0
         const barH = Math.max(8, (val / maxVal) * chartHeight)
         const label = `${Math.floor(data.minutes / 60)}h${data.minutes % 60}m`
         return (
-          <div key={name} style={{ flex: scrollable ? `0 0 ${barMinWidth}px` : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+          <div key={key} style={{ flex: scrollable ? `0 0 ${barMinWidth}px` : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
             <div style={{ fontSize: '0.58em', color: '#1a1a1a', marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
               {label}
             </div>
@@ -406,16 +408,18 @@ function App() {
 
   const activityData = {}
   sessions.forEach(s => {
-    const key = s.sport_name || 'Unknown'
-    if (!activityData[key]) activityData[key] = { minutes: 0, count: 0 }
+    const raw = s.sport_name ? s.sport_name.trim() : ''
+    const key = raw.toLowerCase() || 'unknown'
+    if (!activityData[key]) activityData[key] = { label: raw || 'Unknown', minutes: 0, count: 0 }
     activityData[key].minutes += parseInt(s.duration_mins) || 0
     activityData[key].count += 1
   })
 
   const locationData = {}
   sessions.filter(s => s.location).forEach(s => {
-    const key = s.location
-    if (!locationData[key]) locationData[key] = { minutes: 0, count: 0 }
+    const raw = s.location.trim()
+    const key = raw.toLowerCase()
+    if (!locationData[key]) locationData[key] = { label: raw, minutes: 0, count: 0 }
     locationData[key].minutes += parseInt(s.duration_mins) || 0
     locationData[key].count += 1
   })
