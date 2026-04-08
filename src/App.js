@@ -315,146 +315,6 @@ function BarChart({ data, tooltipFormatter, scrollable }) {
   )
 }
 
-function ActivityHeatmap({ sessions }) {
-  const [tooltip, setTooltip] = useState(null)
-
-  const todayStr = (() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-  })()
-
-  const dayMap = {}
-  sessions.forEach(s => {
-    if (!s.date) return
-    if (!dayMap[s.date]) dayMap[s.date] = { minutes: 0, count: 0, sports: [] }
-    dayMap[s.date].minutes += parseInt(s.duration_mins) || 0
-    dayMap[s.date].count += 1
-    if (s.sport_name) dayMap[s.date].sports.push(s.sport_name)
-  })
-
-  // Start from the Sunday at or before 364 days ago
-  const startDate = new Date()
-  startDate.setDate(startDate.getDate() - 364)
-  startDate.setDate(startDate.getDate() - startDate.getDay())
-
-  const weeks = []
-  const cur = new Date(startDate)
-  const todayDate = new Date(); todayDate.setHours(0,0,0,0)
-  while (cur <= todayDate) {
-    const week = []
-    for (let d = 0; d < 7; d++) {
-      const ds = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`
-      week.push({ date: new Date(cur), dateStr: ds, isFuture: cur > todayDate })
-      cur.setDate(cur.getDate() + 1)
-    }
-    weeks.push(week)
-  }
-
-  const levelColors = [
-    'rgba(139,0,0,0.07)',
-    'rgba(139,0,0,0.22)',
-    'rgba(139,0,0,0.44)',
-    'rgba(139,0,0,0.68)',
-    '#8b0000',
-  ]
-  const getLevel = mins => {
-    if (!mins) return 0
-    if (mins <= 30) return 1
-    if (mins <= 60) return 2
-    if (mins <= 90) return 3
-    return 4
-  }
-
-  const monthLabels = []
-  weeks.forEach((week, wi) => {
-    if (week[0].date.getDate() <= 7) {
-      monthLabels.push({ wi, month: week[0].date.toLocaleString('default', { month: 'short' }) })
-    }
-  })
-
-  const dayNames = ['', 'Mon', '', 'Wed', '', 'Fri', '']
-  const cell = 10, gap = 2, step = cell + gap
-
-  const formatDate = d => {
-    const [y, m, day] = d.split('-')
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`
-  }
-
-  return (
-    <div style={{ marginBottom: '24px', background: 'white', border: '1px solid rgba(139,0,0,0.08)', borderRadius: '4px', padding: '24px 24px 16px', boxShadow: '0 2px 12px rgba(139,0,0,0.05)' }}>
-      <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '14px' }}>
-        Activity
-      </div>
-      <div style={{ overflowX: 'auto', paddingBottom: '4px' }}>
-        <div style={{ display: 'flex', gap: `${gap}px`, minWidth: 'max-content' }}>
-          {/* Day labels */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: `${gap}px`, marginTop: '16px', marginRight: '4px', flexShrink: 0 }}>
-            {dayNames.map((d, i) => (
-              <div key={i} style={{ height: `${cell}px`, fontSize: '8px', color: 'rgba(139,0,0,0.35)', fontFamily: 'Montserrat', lineHeight: `${cell}px`, whiteSpace: 'nowrap' }}>
-                {d}
-              </div>
-            ))}
-          </div>
-          {/* Columns */}
-          <div style={{ flexShrink: 0 }}>
-            {/* Month labels */}
-            <div style={{ display: 'flex', gap: `${gap}px`, height: '14px', marginBottom: '2px' }}>
-              {weeks.map((week, wi) => {
-                const ml = monthLabels.find(m => m.wi === wi)
-                return (
-                  <div key={wi} style={{ width: `${cell}px`, fontSize: '8px', color: 'rgba(139,0,0,0.4)', fontFamily: 'Montserrat', whiteSpace: 'nowrap', overflow: 'visible', lineHeight: '14px' }}>
-                    {ml ? ml.month : ''}
-                  </div>
-                )
-              })}
-            </div>
-            {/* Week columns */}
-            <div style={{ display: 'flex', gap: `${gap}px` }}>
-              {weeks.map((week, wi) => (
-                <div key={wi} style={{ display: 'flex', flexDirection: 'column', gap: `${gap}px` }}>
-                  {week.map((day, di) => {
-                    const data = dayMap[day.dateStr]
-                    const level = data ? getLevel(data.minutes) : 0
-                    const isToday = day.dateStr === todayStr
-                    return (
-                      <div
-                        key={di}
-                        style={{
-                          width: `${cell}px`, height: `${cell}px`, borderRadius: '2px',
-                          background: day.isFuture ? 'transparent' : levelColors[level],
-                          outline: isToday ? '1.5px solid rgba(139,0,0,0.55)' : 'none',
-                          outlineOffset: '0px',
-                          cursor: data ? 'pointer' : 'default',
-                        }}
-                        onMouseMove={e => data && setTooltip({ x: e.clientX, y: e.clientY, day, data })}
-                        onMouseLeave={() => setTooltip(null)}
-                      />
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Legend */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '3px', marginTop: '10px', justifyContent: 'flex-end' }}>
-        <span style={{ fontSize: '8px', color: 'rgba(139,0,0,0.35)', fontFamily: 'Montserrat', marginRight: '3px' }}>Less</span>
-        {levelColors.map((c, i) => (
-          <div key={i} style={{ width: `${cell}px`, height: `${cell}px`, borderRadius: '2px', background: c }} />
-        ))}
-        <span style={{ fontSize: '8px', color: 'rgba(139,0,0,0.35)', fontFamily: 'Montserrat', marginLeft: '3px' }}>More</span>
-      </div>
-      {tooltip && (
-        <div className="tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 44, pointerEvents: 'none' }}>
-          {formatDate(tooltip.day.dateStr)} — {tooltip.data.minutes}min · {tooltip.data.count} session{tooltip.data.count !== 1 ? 's' : ''}
-          {tooltip.data.sports.length > 0 && ` · ${[...new Set(tooltip.data.sports)].join(', ')}`}
-        </div>
-      )}
-    </div>
-  )
-}
 
 function App() {
   const [tracker, setTracker] = useState('sports')
@@ -481,7 +341,7 @@ function App() {
   }
 
   useEffect(() => {
-    fetchSessions()
+    if (page === 'history') fetchSessions()
   }, [page])
 
   const handleSportChange = (value) => {
@@ -639,8 +499,6 @@ function App() {
 
           {/* Log Page */}
           {page === 'log' && (
-            <>
-            <ActivityHeatmap sessions={sessions} />
             <div className="fade-up-delay-2" style={{
               background: 'white', borderRadius: '4px', padding: '32px',
               boxShadow: '0 2px 20px rgba(139,0,0,0.06)', border: '1px solid rgba(139,0,0,0.08)',
@@ -688,7 +546,6 @@ function App() {
                 }}>✦ Session Recorded</div>
               )}
             </div>
-            </>
           )}
 
           {/* History Page */}
