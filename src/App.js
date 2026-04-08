@@ -325,7 +325,7 @@ function BubbleChart({ data }) {
 
   const entries = Object.values(data).sort((a, b) => b.minutes - a.minutes)
   const maxMins = entries.length > 0 ? entries[0].minutes : 1
-  const sizes = entries.map(e => Math.round(80 + Math.sqrt(e.minutes / maxMins) * 50))
+  const sizes = entries.map(e => Math.round(90 + Math.sqrt(e.minutes / maxMins) * 50))
   const sizesRef = useRef(sizes)
   sizesRef.current = sizes
 
@@ -344,17 +344,48 @@ function BubbleChart({ data }) {
     })
     const tick = () => {
       const W2 = containerRef.current ? containerRef.current.offsetWidth : W
-      stateRef.current = stateRef.current.map((b, i) => {
-        const d = sizesRef.current[i] || 60
-        let { x, y, vx, vy } = b
-        x += vx; y += vy
-        if (x <= 0) { x = 0; vx = Math.abs(vx) * (0.85 + Math.random() * 0.3) }
-        if (x + d >= W2) { x = W2 - d; vx = -Math.abs(vx) * (0.85 + Math.random() * 0.3) }
-        if (y <= 0) { y = 0; vy = Math.abs(vy) * (0.85 + Math.random() * 0.3) }
-        if (y + d >= 280) { y = 280 - d; vy = -Math.abs(vy) * (0.85 + Math.random() * 0.3) }
-        return { x, y, vx, vy }
-      })
-      setPositions(stateRef.current.map(b => ({ x: b.x, y: b.y })))
+      const H2 = 280
+      const bs = stateRef.current.map(b => ({ ...b }))
+      const n = bs.length
+
+      // Move
+      for (let i = 0; i < n; i++) { bs[i].x += bs[i].vx; bs[i].y += bs[i].vy }
+
+      // Wall collisions
+      for (let i = 0; i < n; i++) {
+        const d = sizesRef.current[i] || 90
+        if (bs[i].x <= 0) { bs[i].x = 0; bs[i].vx = Math.abs(bs[i].vx) }
+        if (bs[i].x + d >= W2) { bs[i].x = W2 - d; bs[i].vx = -Math.abs(bs[i].vx) }
+        if (bs[i].y <= 0) { bs[i].y = 0; bs[i].vy = Math.abs(bs[i].vy) }
+        if (bs[i].y + d >= H2) { bs[i].y = H2 - d; bs[i].vy = -Math.abs(bs[i].vy) }
+      }
+
+      // Bubble-bubble collisions
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const ri = (sizesRef.current[i] || 90) / 2
+          const rj = (sizesRef.current[j] || 90) / 2
+          const cxi = bs[i].x + ri, cyi = bs[i].y + ri
+          const cxj = bs[j].x + rj, cyj = bs[j].y + rj
+          const dx = cxj - cxi, dy = cyj - cyi
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          const minDist = ri + rj
+          if (dist < minDist && dist > 0.01) {
+            const nx = dx / dist, ny = dy / dist
+            const overlap = (minDist - dist) / 2
+            bs[i].x -= nx * overlap; bs[i].y -= ny * overlap
+            bs[j].x += nx * overlap; bs[j].y += ny * overlap
+            const dvn = (bs[j].vx - bs[i].vx) * nx + (bs[j].vy - bs[i].vy) * ny
+            if (dvn < 0) {
+              bs[i].vx += dvn * nx; bs[i].vy += dvn * ny
+              bs[j].vx -= dvn * nx; bs[j].vy -= dvn * ny
+            }
+          }
+        }
+      }
+
+      stateRef.current = bs
+      setPositions(bs.map(b => ({ x: b.x, y: b.y })))
       animRef.current = requestAnimationFrame(tick)
     }
     animRef.current = requestAnimationFrame(tick)
@@ -389,10 +420,10 @@ function BubbleChart({ data }) {
             onMouseLeave={() => setTooltip(null)}
           >
             <div style={{
-              fontSize: `${Math.max(9, Math.floor(d * 0.13))}px`,
+              fontSize: `${Math.max(9, Math.floor(d * 0.11))}px`,
               color: 'white', fontFamily: 'Montserrat', fontWeight: 700,
-              letterSpacing: '0.5px', textAlign: 'center',
-              padding: '0 8px', lineHeight: 1.2, whiteSpace: 'nowrap',
+              letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1.25,
+              maxWidth: `${Math.floor(d * 0.72)}px`, wordBreak: 'break-word',
             }}>
               {e.label}
             </div>
