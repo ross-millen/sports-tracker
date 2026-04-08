@@ -325,8 +325,8 @@ function BubbleChart({ data }) {
 
   const entries = Object.values(data).sort((a, b) => b.minutes - a.minutes)
   const maxMins = entries.length > 0 ? entries[0].minutes : 1
-  // Min 110px so even long labels like "Whitechapel" fit on one line at the base font size
-  const sizes = entries.map(e => Math.round(110 + Math.sqrt(e.minutes / maxMins) * 40))
+  // Min 90px — enough for "Whitechapel" on one line at 9px Montserrat Bold (maxWidth ~70px)
+  const sizes = entries.map(e => Math.round(90 + Math.sqrt(e.minutes / maxMins) * 25))
   const sizesRef = useRef(sizes)
   sizesRef.current = sizes
 
@@ -368,8 +368,8 @@ function BubbleChart({ data }) {
       return {
         x: Math.random() * Math.max(1, W - d),
         y: Math.random() * Math.max(1, H - d),
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
       }
     })
     // Resolve initial overlaps before animation starts
