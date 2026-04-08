@@ -253,67 +253,6 @@ function DonutChart({ data }) {
   )
 }
 
-function BarChart({ data, tooltipFormatter, scrollable }) {
-  const [tooltip, setTooltip] = useState(null)
-  const entries = Object.entries(data).sort((a, b) => b[1].minutes - a[1].minutes)
-  if (entries.length === 0) return <p style={{ color: 'rgba(80,20,20,0.3)', fontSize: '0.75em', letterSpacing: '2px' }}>Not enough data yet.</p>
-
-  const maxVal = Math.max(...entries.map(([, v]) => v.minutes || 0))
-  const chartHeight = 160
-  const barMinWidth = 56
-
-  const bars = (
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', height: `${chartHeight + 40}px`, padding: '0 4px', minWidth: scrollable ? entries.length * (barMinWidth + 10) : undefined }}>
-      {entries.map(([key, data], i) => {
-        const name = data.label || key
-        const val = data.minutes || 0
-        const barH = Math.max(8, (val / maxVal) * chartHeight)
-        const label = `${Math.floor(data.minutes / 60)}h${data.minutes % 60}m`
-        return (
-          <div key={key} style={{ flex: scrollable ? `0 0 ${barMinWidth}px` : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-            <div style={{ fontSize: '0.58em', color: '#1a1a1a', marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
-              {label}
-            </div>
-            <div
-              className="bar-segment"
-              style={{
-                width: '100%', height: `${barH}px`,
-                background: COLORS[i % COLORS.length],
-                borderRadius: '3px 3px 0 0',
-                animation: `fadeUp 0.6s ease ${i * 0.1}s both`,
-              }}
-              onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, name, data })}
-              onMouseLeave={() => setTooltip(null)}
-            />
-            <div style={{
-              fontSize: '0.55em', color: '#1a1a1a', marginTop: '8px', fontWeight: 700,
-              fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
-              textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
-              textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-            }}>
-              {name}
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-
-  return (
-    <div>
-      {scrollable ? (
-        <div className="location-scroll" style={{ overflowX: 'auto', paddingBottom: '4px' }}>
-          {bars}
-        </div>
-      ) : bars}
-      {tooltip && (
-        <div className="tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
-          {tooltipFormatter(tooltip.name, tooltip.data)}
-        </div>
-      )}
-    </div>
-  )
-}
 
 
 function BubbleChart({ data }) {
@@ -751,20 +690,6 @@ function App() {
                   {/* Location Chart */}
                   {Object.keys(locationData).length > 0 && (
                     <>
-                    <div style={{
-                      background: 'white', border: '1px solid rgba(139,0,0,0.08)',
-                      borderRadius: '4px', padding: '24px', marginBottom: '16px',
-                      boxShadow: '0 2px 12px rgba(139,0,0,0.05)',
-                    }}>
-                      <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
-                        Time by Location
-                      </div>
-                      <BarChart
-                        data={locationData}
-                        tooltipFormatter={(name, d) => `${name} — ${d.count} session${d.count !== 1 ? 's' : ''} · ${Math.floor(d.minutes / 60)}h ${d.minutes % 60}m`}
-                        scrollable
-                      />
-                    </div>
                     <div style={{
                       background: 'white', border: '1px solid rgba(139,0,0,0.08)',
                       borderRadius: '4px', padding: '24px', marginBottom: '28px',
