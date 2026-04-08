@@ -129,8 +129,9 @@ const pushupStyles = `
 `
 
 const BAR_COLORS = [
-  '#1e3a8a', '#7aaad4', '#85b4d4', '#90bfcd',
-  '#7a9ec4', '#8aaabf', '#7ab0c9', '#80b8d4'
+  '#1e3a8a', '#2e8b57', '#7b68b0', '#c4756b',
+  '#d4956a', '#4a90a4', '#8faa5a', '#c9607a',
+  '#5a6ebd', '#6aab7a', '#c4956a', '#8a6aad'
 ]
 
 function PushupDonutChart({ entries }) {

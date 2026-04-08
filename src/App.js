@@ -144,8 +144,9 @@ const globalStyles = `
 `
 
 const COLORS = [
-  '#c4756b', '#d4956a', '#c9a97a', '#8fa88a',
-  '#7a9aad', '#9b8aad', '#b8956a', '#7a8a7a'
+  '#c4756b', '#4a90a4', '#d4956a', '#7b68b0',
+  '#6aab7a', '#c9607a', '#8faa5a', '#c4956a',
+  '#5a8aad', '#d4a86a', '#8a6aad', '#6ab08a'
 ]
 
 const LOCATION_RULES = {
