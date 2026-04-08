@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 import PushupTracker from './PushupTracker'
 import GuinnessLog from './GuinnessLog'
@@ -316,6 +316,104 @@ function BarChart({ data, tooltipFormatter, scrollable }) {
 }
 
 
+function BubbleChart({ data }) {
+  const [tooltip, setTooltip] = useState(null)
+  const containerRef = useRef(null)
+  const animRef = useRef(null)
+  const stateRef = useRef([])
+  const [positions, setPositions] = useState([])
+
+  const entries = Object.values(data).sort((a, b) => b.minutes - a.minutes)
+  const maxMins = entries.length > 0 ? entries[0].minutes : 1
+  const sizes = entries.map(e => Math.round(44 + Math.sqrt(e.minutes / maxMins) * 54))
+  const sizesRef = useRef(sizes)
+  sizesRef.current = sizes
+
+  useEffect(() => {
+    if (!containerRef.current || entries.length === 0) return
+    const W = containerRef.current.offsetWidth
+    const H = 240
+    stateRef.current = entries.map((_, i) => {
+      const d = sizesRef.current[i]
+      return {
+        x: Math.random() * Math.max(1, W - d),
+        y: Math.random() * Math.max(1, H - d),
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+      }
+    })
+    const tick = () => {
+      const W2 = containerRef.current ? containerRef.current.offsetWidth : W
+      stateRef.current = stateRef.current.map((b, i) => {
+        const d = sizesRef.current[i] || 60
+        let { x, y, vx, vy } = b
+        x += vx; y += vy
+        if (x <= 0) { x = 0; vx = Math.abs(vx) * (0.85 + Math.random() * 0.3) }
+        if (x + d >= W2) { x = W2 - d; vx = -Math.abs(vx) * (0.85 + Math.random() * 0.3) }
+        if (y <= 0) { y = 0; vy = Math.abs(vy) * (0.85 + Math.random() * 0.3) }
+        if (y + d >= H) { y = H - d; vy = -Math.abs(vy) * (0.85 + Math.random() * 0.3) }
+        return { x, y, vx, vy }
+      })
+      setPositions(stateRef.current.map(b => ({ x: b.x, y: b.y })))
+      animRef.current = requestAnimationFrame(tick)
+    }
+    animRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(animRef.current)
+  }, [entries.length])
+
+  if (entries.length === 0) return null
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', height: '240px', overflow: 'hidden', borderRadius: '4px' }}>
+      {entries.map((e, i) => {
+        const pos = positions[i] || { x: 0, y: 0 }
+        const d = sizes[i]
+        return (
+          <div
+            key={e.label}
+            style={{
+              position: 'absolute',
+              left: `${pos.x}px`, top: `${pos.y}px`,
+              width: `${d}px`, height: `${d}px`,
+              borderRadius: '50%',
+              background: COLORS[i % COLORS.length],
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              opacity: 0.92,
+              boxShadow: '0 6px 20px rgba(0,0,0,0.13)',
+              cursor: 'default',
+              userSelect: 'none',
+            }}
+            onMouseMove={ev => setTooltip({ x: ev.clientX, y: ev.clientY, e })}
+            onMouseLeave={() => setTooltip(null)}
+          >
+            <div style={{
+              fontSize: `${Math.max(7, Math.floor(d * 0.14))}px`,
+              color: 'white', fontFamily: 'Montserrat', fontWeight: 700,
+              letterSpacing: '0.5px', textAlign: 'center',
+              padding: '0 6px', lineHeight: 1.2, wordBreak: 'break-word', maxWidth: '90%',
+            }}>
+              {e.label}
+            </div>
+            <div style={{
+              fontSize: `${Math.max(6, Math.floor(d * 0.11))}px`,
+              color: 'rgba(255,255,255,0.75)', fontFamily: 'Montserrat',
+              letterSpacing: '0.5px', marginTop: '3px',
+            }}>
+              {Math.floor(e.minutes / 60)}h {e.minutes % 60}m
+            </div>
+          </div>
+        )
+      })}
+      {tooltip && (
+        <div className="tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40, pointerEvents: 'none' }}>
+          {tooltip.e.label} — {tooltip.e.count} session{tooltip.e.count !== 1 ? 's' : ''} · {Math.floor(tooltip.e.minutes / 60)}h {tooltip.e.minutes % 60}m
+        </div>
+      )}
+    </div>
+  )
+}
+
 function App() {
   const [tracker, setTracker] = useState('sports')
   const [page, setPage] = useState('log')
@@ -585,9 +683,10 @@ function App() {
 
                   {/* Location Chart */}
                   {Object.keys(locationData).length > 0 && (
+                    <>
                     <div style={{
                       background: 'white', border: '1px solid rgba(139,0,0,0.08)',
-                      borderRadius: '4px', padding: '24px', marginBottom: '28px',
+                      borderRadius: '4px', padding: '24px', marginBottom: '16px',
                       boxShadow: '0 2px 12px rgba(139,0,0,0.05)',
                     }}>
                       <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
@@ -599,6 +698,17 @@ function App() {
                         scrollable
                       />
                     </div>
+                    <div style={{
+                      background: 'white', border: '1px solid rgba(139,0,0,0.08)',
+                      borderRadius: '4px', padding: '24px', marginBottom: '28px',
+                      boxShadow: '0 2px 12px rgba(139,0,0,0.05)',
+                    }}>
+                      <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>
+                        Locations
+                      </div>
+                      <BubbleChart data={locationData} />
+                    </div>
+                    </>
                   )}
                 </>
               )}
