@@ -301,41 +301,6 @@ export default function OfficeDays({ onBack }) {
 
   const totalDays = sessions.length
 
-  const now = new Date()
-  const thisMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  const thisMonth = sessions.filter(s => s.date && s.date.startsWith(thisMonthStr)).length
-
-  const uniqueDates = [...new Set(sessions.map(s => s.date))].sort((a, b) => b > a ? 1 : -1)
-  const localDate = (offset = 0) => {
-    const d = new Date(); d.setDate(d.getDate() + offset)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  }
-  const today = localDate(0)
-  const yesterday = localDate(-1)
-  let streak = 0
-  if (uniqueDates.length && (uniqueDates[0] === today || uniqueDates[0] === yesterday)) {
-    let cur = new Date(uniqueDates[0] + 'T12:00:00')
-    for (const d of uniqueDates) {
-      const curStr = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`
-      if (d === curStr) { streak++; cur.setDate(cur.getDate() - 1) } else break
-    }
-  }
-
-  const yearStr = `${now.getFullYear()}-`
-  const totalYTD = sessions.filter(s => s.date && s.date.startsWith(yearStr)).length
-
-  const weeklyDays = {}
-  sessions.forEach(s => {
-    if (!s.date || !s.date.startsWith(yearStr)) return
-    const d = new Date(s.date + 'T12:00:00')
-    const day = d.getDay()
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-    const mon = new Date(d); mon.setDate(diff)
-    const weekKey = `${mon.getFullYear()}-${String(mon.getMonth()+1).padStart(2,'0')}-${String(mon.getDate()).padStart(2,'0')}`
-    weeklyDays[weekKey] = (weeklyDays[weekKey] || 0) + 1
-  })
-  const compliantWeeks = Object.values(weeklyDays).filter(n => n >= 3).length
-
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: O.textMuted,
     textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500,
