@@ -177,6 +177,7 @@ export default function GuinnessLog({ onBack }) {
   const [page, setPage] = useState('log')
   const [date, setDate] = useState('')
   const [count, setCount] = useState('')
+  const [location, setLocation] = useState('')
   const [saved, setSaved] = useState(false)
   const [sessions, setSessions] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -199,13 +200,13 @@ export default function GuinnessLog({ onBack }) {
     if (!date || !count) { alert('Please fill in date and count'); return }
     const { error } = await supabase
       .from('guinness_sessions')
-      .insert([{ date, count: parseInt(count) }])
+      .insert([{ date, count: parseInt(count), location: location || null }])
     if (error) {
       alert('Error saving: ' + error.message)
     } else {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-      setDate(''); setCount('')
+      setDate(''); setCount(''); setLocation('')
     }
   }
 
@@ -240,9 +241,15 @@ export default function GuinnessLog({ onBack }) {
   }
 
   const totalPints = sessions.reduce((sum, s) => sum + (parseInt(s.count) || 0), 0)
-  const bestSessionEntry = sessions.reduce((best, s) => (parseInt(s.count) || 0) > (parseInt(best?.count) || 0) ? s : best, null)
-  const bestSession = bestSessionEntry?.count || 0
-  const bestSessionDate = bestSessionEntry ? formatUKDate(bestSessionEntry.date) : ''
+
+  const pintsByDate = {}
+  sessions.forEach(s => {
+    if (!s.date) return
+    pintsByDate[s.date] = (pintsByDate[s.date] || 0) + (parseInt(s.count) || 0)
+  })
+  const bestDayEntry = Object.entries(pintsByDate).reduce((best, [date, pints]) => pints > (best?.pints || 0) ? { date, pints } : best, null)
+  const bestDay = bestDayEntry?.pints || 0
+  const bestDayDate = bestDayEntry ? formatUKDate(bestDayEntry.date) : ''
 
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: G.creamMuted,
@@ -313,9 +320,14 @@ export default function GuinnessLog({ onBack }) {
                 <input className="gu-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
               </div>
 
-              <div style={{ marginBottom: '36px' }}>
+              <div style={{ marginBottom: '24px' }}>
                 <div style={labelStyle}>Pints</div>
                 <input className="gu-input" type="number" placeholder="4" value={count} onChange={e => setCount(e.target.value)} />
+              </div>
+
+              <div style={{ marginBottom: '36px' }}>
+                <div style={labelStyle}>Location <span style={{ opacity: 0.5 }}>(optional)</span></div>
+                <input className="gu-input" type="text" placeholder="The Harp, Covent Garden..." value={location} onChange={e => setLocation(e.target.value)} />
               </div>
 
               <button className="gu-save-btn" onClick={handleSubmit}>Record Session</button>
@@ -340,7 +352,7 @@ export default function GuinnessLog({ onBack }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '28px' }}>
                   {[
                     { label: 'Total Pints', value: totalPints },
-                    { label: 'Best Session', value: bestSession, sub: bestSessionDate },
+                    { label: 'Best Day', value: bestDay, sub: bestDayDate },
                   ].map(kpi => (
                     <div key={kpi.label} style={{
                       padding: '20px', background: G.surface, border: `1px solid rgba(201,164,82,0.12)`,

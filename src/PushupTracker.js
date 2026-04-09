@@ -484,7 +484,7 @@ export default function PushupTracker({ onBack }) {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
                   {[
                     { label: 'Total Reps', value: totalReps.toLocaleString() },
-                    { label: 'Sessions', value: sessions.length },
+                    { label: 'Total Days', value: uniqueDates.length },
                     { label: 'Best Set', value: bestSet, sub: bestSetDate },
                     { label: 'Day Streak', value: streak },
                   ].map(kpi => (
