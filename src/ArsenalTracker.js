@@ -239,12 +239,7 @@ function OpponentBubbleChart({ games }) {
   })
   const entries = Object.values(byOpponent).sort((a, b) => b.count - a.count)
   const maxCount = entries.length > 0 ? entries[0].count : 1
-  // Each bubble must be wide enough for its label at 7px Montserrat Bold (≈0.58px per char per px font)
-  const sizes = entries.map(e => {
-    const labelMin = Math.ceil((e.label.length * 0.58 * 7) / 0.76)
-    const base = Math.max(labelMin, 52)
-    return base + Math.round(Math.sqrt(e.count / maxCount) * 18)
-  })
+  const sizes = entries.map(e => Math.round(62 + Math.sqrt(e.count / maxCount) * 50))
   const sizesRef = useRef(sizes)
   sizesRef.current = sizes
 
@@ -339,7 +334,7 @@ function OpponentBubbleChart({ games }) {
       {entries.map((e, i) => {
         const pos = positions[i] || { x: 0, y: 0 }
         const d = sizes[i]
-        const nameFontSize = Math.max(7, Math.floor((d * 0.76) / (e.label.length * 0.58)))
+        const nameFontSize = Math.min(11, Math.max(7, Math.floor((d * 0.74) / (e.label.length * 0.58))))
         const countFontSize = Math.max(6, Math.floor(nameFontSize * 0.8))
         return (
           <div key={e.label} style={{
