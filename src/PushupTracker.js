@@ -119,6 +119,21 @@ const pushupStyles = `
   }
   .pu-bar-segment:hover { opacity: 0.75; }
 
+  @keyframes flameOuter {
+    0%, 100% { transform: scaleX(1) scaleY(1) rotate(0deg); }
+    25% { transform: scaleX(0.93) scaleY(1.05) rotate(-1.5deg); }
+    75% { transform: scaleX(1.07) scaleY(0.96) rotate(1.5deg); }
+  }
+  @keyframes flameMiddle {
+    0%, 100% { transform: scaleX(1) scaleY(1) rotate(0deg); }
+    33% { transform: scaleX(1.09) scaleY(0.94) rotate(2deg); }
+    66% { transform: scaleX(0.91) scaleY(1.06) rotate(-2deg); }
+  }
+  @keyframes flameInner {
+    0%, 100% { transform: scaleX(1) scaleY(1); opacity: 0.85; }
+    50% { transform: scaleX(0.85) scaleY(1.1); opacity: 1; }
+  }
+
   .pu-tooltip {
     position: fixed; background: #0f2044; color: white;
     padding: 8px 12px; border-radius: 3px; font-size: 0.7em;
@@ -272,6 +287,46 @@ function PushupBarChart({ entries, colorMap }) {
           {tooltip.entry.label} — {tooltip.entry.value} reps{tooltip.entry.target ? ` · ${tooltip.entry.target}` : ''}
         </div>
       )}
+    </div>
+  )
+}
+
+function FlameStreak({ value }) {
+  const wrapStyle = (anim) => ({
+    position: 'absolute', inset: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    transformOrigin: '50% 90%', animation: anim,
+  })
+  return (
+    <div style={{ position: 'relative', width: '64px', height: '80px', margin: '0 auto' }}>
+      {/* Outer flame — dark red-orange */}
+      <div style={wrapStyle('flameOuter 1.3s ease-in-out infinite')}>
+        <svg viewBox="0 0 60 80" style={{ width: '100%', height: '100%' }}>
+          <path d="M30 76 C8 68,4 50,12 34 C16 24,22 12,30 4 C38 12,44 24,48 34 C56 50,52 68,30 76 Z" fill="#e8420a"/>
+        </svg>
+      </div>
+      {/* Middle flame — orange */}
+      <div style={wrapStyle('flameMiddle 0.95s ease-in-out infinite')}>
+        <svg viewBox="0 0 60 80" style={{ width: '100%', height: '100%' }}>
+          <path d="M30 68 C14 62,11 48,17 34 C21 24,25 14,30 8 C35 14,39 24,43 34 C49 48,46 62,30 68 Z" fill="#ff7a00"/>
+        </svg>
+      </div>
+      {/* Inner flame — yellow */}
+      <div style={wrapStyle('flameInner 0.75s ease-in-out infinite')}>
+        <svg viewBox="0 0 60 80" style={{ width: '100%', height: '100%' }}>
+          <path d="M30 60 C20 55,18 44,22 34 C25 26,27 18,30 12 C33 18,35 26,38 34 C42 44,40 55,30 60 Z" fill="#ffd000"/>
+        </svg>
+      </div>
+      {/* Number — centred in the flame belly */}
+      <div className="pu-kpi-shimmer" style={{
+        position: 'absolute', top: '52%', left: 0, right: 0,
+        transform: 'translateY(-50%)',
+        textAlign: 'center', fontFamily: "'Cormorant Garamond', serif",
+        fontSize: '1.5em', fontWeight: 700,
+        lineHeight: 1,
+      }}>
+        {value}
+      </div>
     </div>
   )
 }
@@ -494,7 +549,10 @@ export default function PushupTracker({ onBack }) {
                       borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(30,58,138,0.05)',
                     }}>
                       <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: P.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
-                      <div className="pu-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600 }}>{kpi.value}</div>
+                      {kpi.label === 'Day Streak'
+                        ? <FlameStreak value={kpi.value} />
+                        : <div className="pu-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600 }}>{kpi.value}</div>
+                      }
                       {kpi.sub && <div style={{ fontSize: '0.5em', letterSpacing: '1px', color: P.textFaint, marginTop: '6px', fontFamily: 'Montserrat' }}>{kpi.sub}</div>}
                     </div>
                   ))}
