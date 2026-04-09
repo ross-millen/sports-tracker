@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Treemap } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
 
 const A = {
   red: '#EF0107',
@@ -219,22 +219,23 @@ function ResultDonut({ games }) {
 }
 
 
+const LOLLIPOP_VISIBLE = 8
+
 function LollipopShape(props) {
   const { x, y, width, height, value } = props
-  if (!width || width <= 0) return null
-  const cy = y + height / 2
-  const dotX = x + width
+  if (!height || height <= 0) return null
+  const cx = x + width / 2
   return (
     <g>
-      <line x1={x} y1={cy} x2={dotX} y2={cy} stroke="#EF0107" strokeWidth={1.5} strokeOpacity={0.35} />
-      <circle cx={dotX} cy={cy} r={5} fill="#EF0107" />
-      <text x={dotX + 10} y={cy + 4} fontSize={11} fill="rgba(26,0,0,0.6)" fontFamily="Montserrat" fontWeight={600}>{value}</text>
+      <line x1={cx} y1={y + height} x2={cx} y2={y} stroke="#EF0107" strokeWidth={1.5} strokeOpacity={0.35} />
+      <circle cx={cx} cy={y} r={5} fill="#EF0107" />
+      <text x={cx} y={y - 8} textAnchor="middle" fontSize={11} fill="rgba(26,0,0,0.6)" fontFamily="Montserrat" fontWeight={600}>{value}</text>
     </g>
   )
 }
 
 function OpponentLollipopChart({ games }) {
-  const [search, setSearch] = useState('')
+  const [startIdx, setStartIdx] = useState(0)
 
   const byOpponent = {}
   games.forEach(g => {
@@ -244,114 +245,42 @@ function OpponentLollipopChart({ games }) {
   })
 
   const allData = Object.values(byOpponent).sort((a, b) => b.count - a.count)
-  const filtered = search.trim()
-    ? allData.filter(d => d.label.toLowerCase().includes(search.toLowerCase()))
-    : allData
-
   if (allData.length === 0) return null
 
-  const ROW_H = 34
-  const chartH = Math.max(80, filtered.length * ROW_H)
+  const maxIdx = Math.max(0, allData.length - LOLLIPOP_VISIBLE)
+  const visible = allData.slice(startIdx, startIdx + LOLLIPOP_VISIBLE)
 
   return (
     <div>
-      <input
-        className="ar-input"
-        placeholder="Search opponents..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        style={{ marginBottom: '20px', maxWidth: '260px' }}
-      />
-      {filtered.length === 0 ? (
-        <div style={{ color: 'rgba(26,0,0,0.3)', fontSize: '0.75em', fontFamily: 'Montserrat', paddingTop: '8px' }}>No matches.</div>
-      ) : (
-        <ResponsiveContainer width="100%" height={chartH}>
-          <BarChart layout="vertical" data={filtered} margin={{ top: 0, right: 44, left: 4, bottom: 0 }} barCategoryGap={0}>
-            <CartesianGrid horizontal={false} stroke="rgba(239,1,7,0.07)" />
-            <XAxis type="number" hide />
-            <YAxis type="category" dataKey="label" width={110} tick={{ fontSize: 11, fontFamily: 'Montserrat', fill: 'rgba(26,0,0,0.7)', fontWeight: 500 }} axisLine={false} tickLine={false} />
-            <Bar dataKey="count" shape={<LollipopShape />} isAnimationActive={false} barSize={ROW_H} />
-          </BarChart>
-        </ResponsiveContainer>
-      )}
-    </div>
-  )
-}
-
-function interpolateRed(t) {
-  const r = Math.round(255 + (239 - 255) * t)
-  const g = Math.round(204 + (1 - 204) * t)
-  const b = Math.round(204 + (7 - 204) * t)
-  return `rgb(${r},${g},${b})`
-}
-
-function OpponentTreemap({ games }) {
-  const [tooltip, setTooltip] = useState(null)
-
-  const byOpponent = {}
-  games.forEach(g => {
-    if (!g.opponent) return
-    if (!byOpponent[g.opponent]) byOpponent[g.opponent] = { name: g.opponent, count: 0, W: 0, D: 0, L: 0 }
-    byOpponent[g.opponent].count++
-    if (g.result) byOpponent[g.opponent][g.result]++
-  })
-
-  const entries = Object.values(byOpponent)
-  if (entries.length === 0) return null
-
-  const maxCount = Math.max(...entries.map(e => e.count))
-  const minCount = Math.min(...entries.map(e => e.count))
-  const range = Math.max(1, maxCount - minCount)
-
-  const data = entries.map(e => {
-    const t = (e.count - minCount) / range
-    return { ...e, size: e.count, color: interpolateRed(t), darkTile: t > 0.55 }
-  })
-
-  const renderContent = (props) => {
-    const { x, y, width, height, name, count, color, darkTile, W: wins, D: draws, L: losses } = props
-    const textColor = darkTile ? 'white' : '#1a0000'
-    const subColor = darkTile ? 'rgba(255,255,255,0.7)' : 'rgba(26,0,0,0.5)'
-    const nameFontSize = Math.min(13, Math.max(8, Math.floor(width / Math.max(1, (name || '').length * 0.65))))
-    const showLabel = width > 38 && height > 22
-    const showCount = height > 38
-    return (
-      <g>
-        <rect x={x} y={y} width={width} height={height} fill={color} stroke="white" strokeWidth={2} rx={2}
-          style={{ cursor: 'default' }}
-          onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, name, count, wins, draws, losses })}
-          onMouseLeave={() => setTooltip(null)}
-        />
-        {showLabel && (
-          <text x={x + width / 2} y={y + height / 2 + (showCount ? -5 : 4)}
-            textAnchor="middle" fontSize={nameFontSize} fontFamily="Montserrat" fontWeight={700} fill={textColor}>
-            {name}
-          </text>
-        )}
-        {showLabel && showCount && (
-          <text x={x + width / 2} y={y + height / 2 + 10}
-            textAnchor="middle" fontSize={Math.max(8, nameFontSize - 2)} fontFamily="Montserrat" fill={subColor}>
-            {count}
-          </text>
-        )}
-      </g>
-    )
-  }
-
-  return (
-    <div style={{ position: 'relative' }}>
-      <ResponsiveContainer width="100%" height={320}>
-        <Treemap data={data} dataKey="size" aspectRatio={4 / 3} content={renderContent} isAnimationActive={false} />
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={visible} margin={{ top: 24, right: 12, left: 12, bottom: 8 }}>
+          <CartesianGrid vertical={false} stroke="rgba(239,1,7,0.07)" />
+          <XAxis
+            dataKey="label"
+            axisLine={false}
+            tickLine={false}
+            interval={0}
+            tick={{ fontSize: 10, fontFamily: 'Montserrat', fill: 'rgba(26,0,0,0.6)', fontWeight: 500 }}
+            tickFormatter={v => v.length > 11 ? v.slice(0, 10) + '…' : v}
+          />
+          <YAxis hide />
+          <Bar dataKey="count" shape={<LollipopShape />} isAnimationActive={false} barSize={36} />
+        </BarChart>
       </ResponsiveContainer>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', justifyContent: 'center' }}>
-        <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.4)', letterSpacing: '1px' }}>Fewer games</span>
-        <div style={{ width: '80px', height: '8px', borderRadius: '4px', background: 'linear-gradient(to right, #FFCCCC, #EF0107)' }} />
-        <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.4)', letterSpacing: '1px' }}>More games</span>
-      </div>
-      {tooltip && (
-        <div style={{ position: 'fixed', left: tooltip.x + 12, top: tooltip.y - 50, background: '#1a0000', color: 'white', padding: '8px 12px', borderRadius: '3px', fontSize: '0.7em', fontFamily: 'Montserrat', letterSpacing: '1px', pointerEvents: 'none', zIndex: 1000, whiteSpace: 'nowrap' }}>
-          <div>{tooltip.name} — {tooltip.count} game{tooltip.count !== 1 ? 's' : ''}</div>
-          <div style={{ fontSize: '0.85em', opacity: 0.7, marginTop: '3px' }}>{tooltip.wins}W {tooltip.draws}D {tooltip.losses}L</div>
+      {maxIdx > 0 && (
+        <div style={{ paddingTop: '4px' }}>
+          <input
+            type="range"
+            min={0}
+            max={maxIdx}
+            value={startIdx}
+            onChange={e => setStartIdx(Number(e.target.value))}
+            style={{ width: '100%', accentColor: '#EF0107', cursor: 'pointer' }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+            <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.3)', letterSpacing: '1px' }}>Most seen</span>
+            <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.3)', letterSpacing: '1px' }}>Least seen</span>
+          </div>
         </div>
       )}
     </div>
@@ -597,15 +526,9 @@ export default function ArsenalTracker({ onBack }) {
                 </div>
 
                 {/* Opponents lollipop chart */}
-                <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '20px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
+                <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
                   <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Opponents</div>
                   <OpponentLollipopChart games={games} />
-                </div>
-
-                {/* Opponents treemap */}
-                <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
-                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Opponent Breakdown</div>
-                  <OpponentTreemap games={games} />
                 </div>
 
               </>
