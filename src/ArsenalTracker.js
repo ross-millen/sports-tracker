@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 
 const A = {
@@ -253,6 +253,164 @@ function CompetitionBar({ games }) {
   )
 }
 
+const BUBBLE_COLORS = [
+  '#EF0107', '#b30005', '#9C824A', '#1a5c38',
+  '#2563eb', '#7b68b0', '#d97706', '#c9607a',
+  '#4a90a4', '#5a6ebd', '#6aab7a', '#c4956a',
+]
+
+function OpponentBubbleChart({ games }) {
+  const [tooltip, setTooltip] = useState(null)
+  const containerRef = useRef(null)
+  const animRef = useRef(null)
+  const stateRef = useRef([])
+  const [positions, setPositions] = useState([])
+
+  const byOpponent = {}
+  games.forEach(g => {
+    if (!byOpponent[g.opponent]) byOpponent[g.opponent] = { label: g.opponent, count: 0, W: 0, D: 0, L: 0 }
+    byOpponent[g.opponent].count++
+    if (g.result) byOpponent[g.opponent][g.result]++
+  })
+  const entries = Object.values(byOpponent).sort((a, b) => b.count - a.count)
+  const maxCount = entries.length > 0 ? entries[0].count : 1
+  const sizes = entries.map(e => Math.round(44 + Math.sqrt(e.count / maxCount) * 22))
+  const sizesRef = useRef(sizes)
+  sizesRef.current = sizes
+
+  const resolveCollisions = (bs, W, H) => {
+    for (let pass = 0; pass < 5; pass++) {
+      for (let i = 0; i < bs.length; i++) {
+        for (let j = i + 1; j < bs.length; j++) {
+          const ri = sizesRef.current[i] / 2, rj = sizesRef.current[j] / 2
+          const dx = (bs[j].x + rj) - (bs[i].x + ri)
+          const dy = (bs[j].y + rj) - (bs[i].y + ri)
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
+          const minDist = ri + rj
+          if (dist < minDist) {
+            const nx = dx / dist, ny = dy / dist
+            const push = (minDist - dist) / 2
+            bs[i].x -= nx * push; bs[i].y -= ny * push
+            bs[j].x += nx * push; bs[j].y += ny * push
+            bs[i].x = Math.max(0, Math.min(W - sizesRef.current[i], bs[i].x))
+            bs[i].y = Math.max(0, Math.min(H - sizesRef.current[i], bs[i].y))
+            bs[j].x = Math.max(0, Math.min(W - sizesRef.current[j], bs[j].x))
+            bs[j].y = Math.max(0, Math.min(H - sizesRef.current[j], bs[j].y))
+          }
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!containerRef.current || entries.length === 0) return
+    const W = containerRef.current.offsetWidth
+    const H = 300
+    stateRef.current = entries.map((_, i) => {
+      const d = sizesRef.current[i]
+      return {
+        x: Math.random() * Math.max(1, W - d),
+        y: Math.random() * Math.max(1, H - d),
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+      }
+    })
+    resolveCollisions(stateRef.current, W, H)
+
+    const tick = () => {
+      const W2 = containerRef.current ? containerRef.current.offsetWidth : W
+      const H2 = 300
+      const bs = stateRef.current.map(b => ({ ...b }))
+
+      for (let i = 0; i < bs.length; i++) { bs[i].x += bs[i].vx; bs[i].y += bs[i].vy }
+
+      for (let i = 0; i < bs.length; i++) {
+        const d = sizesRef.current[i]
+        if (bs[i].x <= 0) { bs[i].x = 0; bs[i].vx = Math.abs(bs[i].vx) }
+        if (bs[i].x + d >= W2) { bs[i].x = W2 - d; bs[i].vx = -Math.abs(bs[i].vx) }
+        if (bs[i].y <= 0) { bs[i].y = 0; bs[i].vy = Math.abs(bs[i].vy) }
+        if (bs[i].y + d >= H2) { bs[i].y = H2 - d; bs[i].vy = -Math.abs(bs[i].vy) }
+      }
+
+      for (let i = 0; i < bs.length; i++) {
+        for (let j = i + 1; j < bs.length; j++) {
+          const ri = sizesRef.current[i] / 2, rj = sizesRef.current[j] / 2
+          const dx = (bs[j].x + rj) - (bs[i].x + ri)
+          const dy = (bs[j].y + rj) - (bs[i].y + ri)
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
+          const minDist = ri + rj
+          if (dist < minDist) {
+            const nx = dx / dist, ny = dy / dist
+            const push = (minDist - dist) / 2
+            bs[i].x -= nx * push; bs[i].y -= ny * push
+            bs[j].x += nx * push; bs[j].y += ny * push
+            const dvn = (bs[j].vx - bs[i].vx) * nx + (bs[j].vy - bs[i].vy) * ny
+            if (dvn < 0) {
+              bs[i].vx += dvn * nx; bs[i].vy += dvn * ny
+              bs[j].vx -= dvn * nx; bs[j].vy -= dvn * ny
+            }
+          }
+        }
+      }
+
+      stateRef.current = bs
+      setPositions(bs.map(b => ({ x: b.x, y: b.y })))
+      animRef.current = requestAnimationFrame(tick)
+    }
+    animRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(animRef.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries.length])
+
+  if (entries.length === 0) return null
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', height: '300px', overflow: 'hidden', borderRadius: '4px' }}>
+      {entries.map((e, i) => {
+        const pos = positions[i] || { x: 0, y: 0 }
+        const d = sizes[i]
+        const nameFontSize = Math.max(5, Math.floor((d * 0.78) / (e.label.length * 0.60)))
+        const countFontSize = Math.max(5, Math.floor(nameFontSize * 0.8))
+        return (
+          <div key={e.label} style={{
+            position: 'absolute', left: `${pos.x}px`, top: `${pos.y}px`,
+            width: `${d}px`, height: `${d}px`, borderRadius: '50%',
+            background: BUBBLE_COLORS[i % BUBBLE_COLORS.length],
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            opacity: 0.92, boxShadow: '0 6px 20px rgba(0,0,0,0.13)',
+            cursor: 'default', userSelect: 'none',
+          }}
+            onMouseMove={ev => setTooltip({ x: ev.clientX, y: ev.clientY, e })}
+            onMouseLeave={() => setTooltip(null)}
+          >
+            <div style={{
+              fontSize: `${nameFontSize}px`, color: 'white', fontFamily: 'Montserrat',
+              fontWeight: 700, letterSpacing: '0.3px', textAlign: 'center',
+              whiteSpace: 'nowrap',
+            }}>{e.label}</div>
+            <div style={{
+              fontSize: `${countFontSize}px`,
+              color: 'rgba(255,255,255,0.75)', fontFamily: 'Montserrat',
+              letterSpacing: '0.5px', marginTop: '2px',
+            }}>{e.count} game{e.count !== 1 ? 's' : ''}</div>
+          </div>
+        )
+      })}
+      {tooltip && (
+        <div style={{
+          position: 'fixed', left: tooltip.x + 12, top: tooltip.y - 40,
+          background: A.text, color: 'white', padding: '8px 12px',
+          borderRadius: '3px', fontSize: '0.7em', fontFamily: 'Montserrat',
+          letterSpacing: '1px', pointerEvents: 'none', zIndex: 1000, whiteSpace: 'nowrap',
+        }}>
+          {tooltip.e.label} — {tooltip.e.W}W {tooltip.e.D}D {tooltip.e.L}L
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ArsenalTracker({ onBack }) {
   const [page, setPage] = useState('log')
   const [date, setDate] = useState('')
@@ -491,11 +649,12 @@ export default function ArsenalTracker({ onBack }) {
                   <ResultDonut games={games} />
                 </div>
 
-                {/* Competition bar */}
+                {/* Opponents bubble chart */}
                 <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
-                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>By Competition</div>
-                  <CompetitionBar games={games} />
+                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Opponents</div>
+                  <OpponentBubbleChart games={games} />
                 </div>
+
               </>
             )}
 
