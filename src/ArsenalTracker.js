@@ -239,7 +239,12 @@ function OpponentBubbleChart({ games }) {
   })
   const entries = Object.values(byOpponent).sort((a, b) => b.count - a.count)
   const maxCount = entries.length > 0 ? entries[0].count : 1
-  const sizes = entries.map(e => Math.round(44 + Math.sqrt(e.count / maxCount) * 22))
+  // Each bubble must be wide enough for its label at 7px Montserrat Bold (≈0.58px per char per px font)
+  const sizes = entries.map(e => {
+    const labelMin = Math.ceil((e.label.length * 0.58 * 7) / 0.76)
+    const base = Math.max(labelMin, 52)
+    return base + Math.round(Math.sqrt(e.count / maxCount) * 18)
+  })
   const sizesRef = useRef(sizes)
   sizesRef.current = sizes
 
@@ -270,7 +275,7 @@ function OpponentBubbleChart({ games }) {
   useEffect(() => {
     if (!containerRef.current || entries.length === 0) return
     const W = containerRef.current.offsetWidth
-    const H = 300
+    const H = 340
     stateRef.current = entries.map((_, i) => {
       const d = sizesRef.current[i]
       return {
@@ -284,7 +289,7 @@ function OpponentBubbleChart({ games }) {
 
     const tick = () => {
       const W2 = containerRef.current ? containerRef.current.offsetWidth : W
-      const H2 = 300
+      const H2 = 340
       const bs = stateRef.current.map(b => ({ ...b }))
 
       for (let i = 0; i < bs.length; i++) { bs[i].x += bs[i].vx; bs[i].y += bs[i].vy }
@@ -330,12 +335,12 @@ function OpponentBubbleChart({ games }) {
   if (entries.length === 0) return null
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', height: '300px', overflow: 'hidden', borderRadius: '4px' }}>
+    <div ref={containerRef} style={{ position: 'relative', height: '340px', overflow: 'hidden', borderRadius: '4px' }}>
       {entries.map((e, i) => {
         const pos = positions[i] || { x: 0, y: 0 }
         const d = sizes[i]
-        const nameFontSize = Math.max(5, Math.floor((d * 0.78) / (e.label.length * 0.60)))
-        const countFontSize = Math.max(5, Math.floor(nameFontSize * 0.8))
+        const nameFontSize = Math.max(7, Math.floor((d * 0.76) / (e.label.length * 0.58)))
+        const countFontSize = Math.max(6, Math.floor(nameFontSize * 0.8))
         return (
           <div key={e.label} style={{
             position: 'absolute', left: `${pos.x}px`, top: `${pos.y}px`,

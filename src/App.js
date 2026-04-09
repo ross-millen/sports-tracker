@@ -568,7 +568,7 @@ function App() {
             {[
               { label: 'Pushups', key: 'pushups' },
               { label: 'Guinness', key: 'guinness' },
-              { label: 'Office Days', key: 'office' },
+              { label: 'Office', key: 'office' },
               { label: 'Arsenal', key: 'arsenal' },
             ].map(item => (
               <button
