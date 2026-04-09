@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Treemap } from 'recharts'
 
 const A = {
   red: '#EF0107',
@@ -218,158 +219,139 @@ function ResultDonut({ games }) {
 }
 
 
-const BUBBLE_COLORS = [
-  '#EF0107', '#b30005', '#9C824A', '#1a5c38',
-  '#2563eb', '#7b68b0', '#d97706', '#c9607a',
-  '#4a90a4', '#5a6ebd', '#6aab7a', '#c4956a',
-]
+function LollipopShape(props) {
+  const { x, y, width, height, value } = props
+  if (!width || width <= 0) return null
+  const cy = y + height / 2
+  const dotX = x + width
+  return (
+    <g>
+      <line x1={x} y1={cy} x2={dotX} y2={cy} stroke="#EF0107" strokeWidth={1.5} strokeOpacity={0.35} />
+      <circle cx={dotX} cy={cy} r={5} fill="#EF0107" />
+      <text x={dotX + 10} y={cy + 4} fontSize={11} fill="rgba(26,0,0,0.6)" fontFamily="Montserrat" fontWeight={600}>{value}</text>
+    </g>
+  )
+}
 
-function OpponentBubbleChart({ games }) {
-  const [tooltip, setTooltip] = useState(null)
-  const containerRef = useRef(null)
-  const animRef = useRef(null)
-  const stateRef = useRef([])
-  const [positions, setPositions] = useState([])
+function OpponentLollipopChart({ games }) {
+  const [search, setSearch] = useState('')
 
   const byOpponent = {}
   games.forEach(g => {
-    if (!byOpponent[g.opponent]) byOpponent[g.opponent] = { label: g.opponent, count: 0, W: 0, D: 0, L: 0 }
+    if (!g.opponent) return
+    if (!byOpponent[g.opponent]) byOpponent[g.opponent] = { label: g.opponent, count: 0 }
+    byOpponent[g.opponent].count++
+  })
+
+  const allData = Object.values(byOpponent).sort((a, b) => b.count - a.count)
+  const filtered = search.trim()
+    ? allData.filter(d => d.label.toLowerCase().includes(search.toLowerCase()))
+    : allData
+
+  if (allData.length === 0) return null
+
+  const ROW_H = 34
+  const chartH = Math.max(80, filtered.length * ROW_H)
+
+  return (
+    <div>
+      <input
+        className="ar-input"
+        placeholder="Search opponents..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={{ marginBottom: '20px', maxWidth: '260px' }}
+      />
+      {filtered.length === 0 ? (
+        <div style={{ color: 'rgba(26,0,0,0.3)', fontSize: '0.75em', fontFamily: 'Montserrat', paddingTop: '8px' }}>No matches.</div>
+      ) : (
+        <ResponsiveContainer width="100%" height={chartH}>
+          <BarChart layout="vertical" data={filtered} margin={{ top: 0, right: 44, left: 4, bottom: 0 }} barCategoryGap={0}>
+            <CartesianGrid horizontal={false} stroke="rgba(239,1,7,0.07)" />
+            <XAxis type="number" hide />
+            <YAxis type="category" dataKey="label" width={110} tick={{ fontSize: 11, fontFamily: 'Montserrat', fill: 'rgba(26,0,0,0.7)', fontWeight: 500 }} axisLine={false} tickLine={false} />
+            <Bar dataKey="count" shape={<LollipopShape />} isAnimationActive={false} barSize={ROW_H} />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  )
+}
+
+function interpolateRed(t) {
+  const r = Math.round(255 + (239 - 255) * t)
+  const g = Math.round(204 + (1 - 204) * t)
+  const b = Math.round(204 + (7 - 204) * t)
+  return `rgb(${r},${g},${b})`
+}
+
+function OpponentTreemap({ games }) {
+  const [tooltip, setTooltip] = useState(null)
+
+  const byOpponent = {}
+  games.forEach(g => {
+    if (!g.opponent) return
+    if (!byOpponent[g.opponent]) byOpponent[g.opponent] = { name: g.opponent, count: 0, W: 0, D: 0, L: 0 }
     byOpponent[g.opponent].count++
     if (g.result) byOpponent[g.opponent][g.result]++
   })
-  const entries = Object.values(byOpponent).sort((a, b) => b.count - a.count)
-  const maxCount = entries.length > 0 ? entries[0].count : 1
-  const sizes = entries.map(e => Math.round(62 + Math.sqrt(e.count / maxCount) * 50))
-  const sizesRef = useRef(sizes)
-  sizesRef.current = sizes
 
-  const resolveCollisions = (bs, W, H) => {
-    for (let pass = 0; pass < 5; pass++) {
-      for (let i = 0; i < bs.length; i++) {
-        for (let j = i + 1; j < bs.length; j++) {
-          const ri = sizesRef.current[i] / 2, rj = sizesRef.current[j] / 2
-          const dx = (bs[j].x + rj) - (bs[i].x + ri)
-          const dy = (bs[j].y + rj) - (bs[i].y + ri)
-          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
-          const minDist = ri + rj
-          if (dist < minDist) {
-            const nx = dx / dist, ny = dy / dist
-            const push = (minDist - dist) / 2
-            bs[i].x -= nx * push; bs[i].y -= ny * push
-            bs[j].x += nx * push; bs[j].y += ny * push
-            bs[i].x = Math.max(0, Math.min(W - sizesRef.current[i], bs[i].x))
-            bs[i].y = Math.max(0, Math.min(H - sizesRef.current[i], bs[i].y))
-            bs[j].x = Math.max(0, Math.min(W - sizesRef.current[j], bs[j].x))
-            bs[j].y = Math.max(0, Math.min(H - sizesRef.current[j], bs[j].y))
-          }
-        }
-      }
-    }
-  }
-
-  useEffect(() => {
-    if (!containerRef.current || entries.length === 0) return
-    const W = containerRef.current.offsetWidth
-    const H = 340
-    stateRef.current = entries.map((_, i) => {
-      const d = sizesRef.current[i]
-      return {
-        x: Math.random() * Math.max(1, W - d),
-        y: Math.random() * Math.max(1, H - d),
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
-      }
-    })
-    resolveCollisions(stateRef.current, W, H)
-
-    const tick = () => {
-      const W2 = containerRef.current ? containerRef.current.offsetWidth : W
-      const H2 = 340
-      const bs = stateRef.current.map(b => ({ ...b }))
-
-      for (let i = 0; i < bs.length; i++) { bs[i].x += bs[i].vx; bs[i].y += bs[i].vy }
-
-      for (let i = 0; i < bs.length; i++) {
-        const d = sizesRef.current[i]
-        if (bs[i].x <= 0) { bs[i].x = 0; bs[i].vx = Math.abs(bs[i].vx) }
-        if (bs[i].x + d >= W2) { bs[i].x = W2 - d; bs[i].vx = -Math.abs(bs[i].vx) }
-        if (bs[i].y <= 0) { bs[i].y = 0; bs[i].vy = Math.abs(bs[i].vy) }
-        if (bs[i].y + d >= H2) { bs[i].y = H2 - d; bs[i].vy = -Math.abs(bs[i].vy) }
-      }
-
-      for (let i = 0; i < bs.length; i++) {
-        for (let j = i + 1; j < bs.length; j++) {
-          const ri = sizesRef.current[i] / 2, rj = sizesRef.current[j] / 2
-          const dx = (bs[j].x + rj) - (bs[i].x + ri)
-          const dy = (bs[j].y + rj) - (bs[i].y + ri)
-          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
-          const minDist = ri + rj
-          if (dist < minDist) {
-            const nx = dx / dist, ny = dy / dist
-            const push = (minDist - dist) / 2
-            bs[i].x -= nx * push; bs[i].y -= ny * push
-            bs[j].x += nx * push; bs[j].y += ny * push
-            const dvn = (bs[j].vx - bs[i].vx) * nx + (bs[j].vy - bs[i].vy) * ny
-            if (dvn < 0) {
-              bs[i].vx += dvn * nx; bs[i].vy += dvn * ny
-              bs[j].vx -= dvn * nx; bs[j].vy -= dvn * ny
-            }
-          }
-        }
-      }
-
-      stateRef.current = bs
-      setPositions(bs.map(b => ({ x: b.x, y: b.y })))
-      animRef.current = requestAnimationFrame(tick)
-    }
-    animRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(animRef.current)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries.length])
-
+  const entries = Object.values(byOpponent)
   if (entries.length === 0) return null
 
+  const maxCount = Math.max(...entries.map(e => e.count))
+  const minCount = Math.min(...entries.map(e => e.count))
+  const range = Math.max(1, maxCount - minCount)
+
+  const data = entries.map(e => {
+    const t = (e.count - minCount) / range
+    return { ...e, size: e.count, color: interpolateRed(t), darkTile: t > 0.55 }
+  })
+
+  const renderContent = (props) => {
+    const { x, y, width, height, name, count, color, darkTile, W: wins, D: draws, L: losses } = props
+    const textColor = darkTile ? 'white' : '#1a0000'
+    const subColor = darkTile ? 'rgba(255,255,255,0.7)' : 'rgba(26,0,0,0.5)'
+    const nameFontSize = Math.min(13, Math.max(8, Math.floor(width / Math.max(1, (name || '').length * 0.65))))
+    const showLabel = width > 38 && height > 22
+    const showCount = height > 38
+    return (
+      <g>
+        <rect x={x} y={y} width={width} height={height} fill={color} stroke="white" strokeWidth={2} rx={2}
+          style={{ cursor: 'default' }}
+          onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, name, count, wins, draws, losses })}
+          onMouseLeave={() => setTooltip(null)}
+        />
+        {showLabel && (
+          <text x={x + width / 2} y={y + height / 2 + (showCount ? -5 : 4)}
+            textAnchor="middle" fontSize={nameFontSize} fontFamily="Montserrat" fontWeight={700} fill={textColor}>
+            {name}
+          </text>
+        )}
+        {showLabel && showCount && (
+          <text x={x + width / 2} y={y + height / 2 + 10}
+            textAnchor="middle" fontSize={Math.max(8, nameFontSize - 2)} fontFamily="Montserrat" fill={subColor}>
+            {count}
+          </text>
+        )}
+      </g>
+    )
+  }
+
   return (
-    <div ref={containerRef} style={{ position: 'relative', height: '340px', overflow: 'hidden', borderRadius: '4px' }}>
-      {entries.map((e, i) => {
-        const pos = positions[i] || { x: 0, y: 0 }
-        const d = sizes[i]
-        const nameFontSize = Math.min(11, Math.max(7, Math.floor((d * 0.74) / (e.label.length * 0.58))))
-        const countFontSize = Math.max(6, Math.floor(nameFontSize * 0.8))
-        return (
-          <div key={e.label} style={{
-            position: 'absolute', left: `${pos.x}px`, top: `${pos.y}px`,
-            width: `${d}px`, height: `${d}px`, borderRadius: '50%',
-            background: BUBBLE_COLORS[i % BUBBLE_COLORS.length],
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            opacity: 0.92, boxShadow: '0 6px 20px rgba(0,0,0,0.13)',
-            cursor: 'default', userSelect: 'none',
-          }}
-            onMouseMove={ev => setTooltip({ x: ev.clientX, y: ev.clientY, e })}
-            onMouseLeave={() => setTooltip(null)}
-          >
-            <div style={{
-              fontSize: `${nameFontSize}px`, color: 'white', fontFamily: 'Montserrat',
-              fontWeight: 700, letterSpacing: '0.3px', textAlign: 'center',
-              whiteSpace: 'nowrap',
-            }}>{e.label}</div>
-            <div style={{
-              fontSize: `${countFontSize}px`,
-              color: 'rgba(255,255,255,0.75)', fontFamily: 'Montserrat',
-              letterSpacing: '0.5px', marginTop: '2px',
-            }}>{e.count} game{e.count !== 1 ? 's' : ''}</div>
-          </div>
-        )
-      })}
+    <div style={{ position: 'relative' }}>
+      <ResponsiveContainer width="100%" height={320}>
+        <Treemap data={data} dataKey="size" aspectRatio={4 / 3} content={renderContent} isAnimationActive={false} />
+      </ResponsiveContainer>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', justifyContent: 'center' }}>
+        <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.4)', letterSpacing: '1px' }}>Fewer games</span>
+        <div style={{ width: '80px', height: '8px', borderRadius: '4px', background: 'linear-gradient(to right, #FFCCCC, #EF0107)' }} />
+        <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.4)', letterSpacing: '1px' }}>More games</span>
+      </div>
       {tooltip && (
-        <div style={{
-          position: 'fixed', left: tooltip.x + 12, top: tooltip.y - 40,
-          background: A.text, color: 'white', padding: '8px 12px',
-          borderRadius: '3px', fontSize: '0.7em', fontFamily: 'Montserrat',
-          letterSpacing: '1px', pointerEvents: 'none', zIndex: 1000, whiteSpace: 'nowrap',
-        }}>
-          {tooltip.e.label} — {tooltip.e.W}W {tooltip.e.D}D {tooltip.e.L}L
+        <div style={{ position: 'fixed', left: tooltip.x + 12, top: tooltip.y - 50, background: '#1a0000', color: 'white', padding: '8px 12px', borderRadius: '3px', fontSize: '0.7em', fontFamily: 'Montserrat', letterSpacing: '1px', pointerEvents: 'none', zIndex: 1000, whiteSpace: 'nowrap' }}>
+          <div>{tooltip.name} — {tooltip.count} game{tooltip.count !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: '0.85em', opacity: 0.7, marginTop: '3px' }}>{tooltip.wins}W {tooltip.draws}D {tooltip.losses}L</div>
         </div>
       )}
     </div>
@@ -614,10 +596,16 @@ export default function ArsenalTracker({ onBack }) {
                   <ResultDonut games={games} />
                 </div>
 
-                {/* Opponents bubble chart */}
-                <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
+                {/* Opponents lollipop chart */}
+                <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '20px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
                   <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Opponents</div>
-                  <OpponentBubbleChart games={games} />
+                  <OpponentLollipopChart games={games} />
+                </div>
+
+                {/* Opponents treemap */}
+                <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
+                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Opponent Breakdown</div>
+                  <OpponentTreemap games={games} />
                 </div>
 
               </>
