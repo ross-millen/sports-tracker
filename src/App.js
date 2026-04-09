@@ -566,10 +566,10 @@ function App() {
           </p>
           <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
             {[
-              { label: 'Pushups', key: 'pushups' },
-              { label: 'Guinness', key: 'guinness' },
-              { label: 'Office', key: 'office' },
               { label: 'Arsenal', key: 'arsenal' },
+              { label: 'Guinness', key: 'guinness' },
+              { label: 'Pushups', key: 'pushups' },
+              { label: 'Office', key: 'office' },
             ].map(item => (
               <button
                 key={item.key}
