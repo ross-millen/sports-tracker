@@ -192,24 +192,8 @@ function ResultDonut({ games }) {
           })}
           <circle cx={cx} cy={cy} r={R - stroke / 2} fill="none" stroke="white" strokeWidth="1.5" />
           <circle cx={cx} cy={cy} r={R + stroke / 2} fill="none" stroke="white" strokeWidth="1.5" />
-          {/* Arsenal cannon — barrel faces left */}
-          <g>
-            {/* cannonball */}
-            <circle cx="76" cy="73" r="3.5" fill="#9C824A" />
-            {/* barrel */}
-            <rect x="79" y="70" width="29" height="6" rx="2" fill="#9C824A" />
-            {/* muzzle ring (left, slightly wider) */}
-            <rect x="77" y="68.5" width="6" height="9" rx="2" fill="#9C824A" />
-            {/* breech (right, slightly wider) */}
-            <rect x="106" y="68.5" width="6" height="9" rx="2" fill="#9C824A" />
-            {/* carriage */}
-            <rect x="81" y="76" width="25" height="4" rx="1.5" fill="#b30005" />
-            {/* wheels */}
-            <circle cx="87" cy="83" r="4.5" fill="none" stroke="#b30005" strokeWidth="2" />
-            <circle cx="101" cy="83" r="4.5" fill="none" stroke="#b30005" strokeWidth="2" />
-          </g>
-          <text x={cx} y={cy + 10} textAnchor="middle" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '18px', fill: A.text, fontWeight: 600 }}>{total}</text>
-          <text x={cx} y={cy + 22} textAnchor="middle" style={{ fontFamily: 'Montserrat', fontSize: '6px', fill: A.textMuted, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700 }}>GAMES</text>
+          <text x={cx} y={cy - 6} textAnchor="middle" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', fill: A.text, fontWeight: 600 }}>{total}</text>
+          <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontFamily: 'Montserrat', fontSize: '6px', fill: A.textMuted, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700 }}>GAMES</text>
         </svg>
         <div style={{ flex: 1 }}>
           {slices.map((s, i) => (
