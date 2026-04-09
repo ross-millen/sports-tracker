@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 import PushupTracker from './PushupTracker'
 import GuinnessLog from './GuinnessLog'
+import OfficeDays from './OfficeDays'
+import ArsenalTracker from './ArsenalTracker'
 
 const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
@@ -566,6 +568,8 @@ function App() {
             {[
               { label: 'Pushups', key: 'pushups' },
               { label: 'Guinness', key: 'guinness' },
+              { label: 'Office Days', key: 'office' },
+              { label: 'Arsenal', key: 'arsenal' },
             ].map(item => (
               <button
                 key={item.key}
@@ -588,6 +592,8 @@ function App() {
         <div style={{ maxWidth: '480px', margin: '0 auto' }}>
           {tracker === 'pushups' && <PushupTracker onBack={() => setTracker('sports')} />}
           {tracker === 'guinness' && <GuinnessLog onBack={() => setTracker('sports')} />}
+          {tracker === 'office' && <OfficeDays onBack={() => setTracker('sports')} />}
+          {tracker === 'arsenal' && <ArsenalTracker onBack={() => setTracker('sports')} />}
           {tracker === 'sports' && (<>
 
           {/* Nav */}
