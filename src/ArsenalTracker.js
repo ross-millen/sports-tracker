@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
 
 const A = {
   red: '#EF0107',
@@ -219,20 +219,7 @@ function ResultDonut({ games }) {
 }
 
 
-const LOLLIPOP_VISIBLE = 8
-
-function LollipopShape(props) {
-  const { x, y, width, height, value } = props
-  if (!height || height <= 0) return null
-  const cx = x + width / 2
-  return (
-    <g>
-      <line x1={cx} y1={y + height} x2={cx} y2={y} stroke="#EF0107" strokeWidth={1.5} strokeOpacity={0.35} />
-      <circle cx={cx} cy={y} r={5} fill="#EF0107" />
-      <text x={cx} y={y - 8} textAnchor="middle" fontSize={11} fill="rgba(26,0,0,0.6)" fontFamily="Montserrat" fontWeight={600}>{value}</text>
-    </g>
-  )
-}
+const CHART_VISIBLE = 8
 
 function OpponentLollipopChart({ games }) {
   const [startIdx, setStartIdx] = useState(0)
@@ -240,20 +227,31 @@ function OpponentLollipopChart({ games }) {
   const byOpponent = {}
   games.forEach(g => {
     if (!g.opponent) return
-    if (!byOpponent[g.opponent]) byOpponent[g.opponent] = { label: g.opponent, count: 0 }
-    byOpponent[g.opponent].count++
+    if (!byOpponent[g.opponent]) byOpponent[g.opponent] = { label: g.opponent, W: 0, D: 0, L: 0 }
+    if (g.result) byOpponent[g.opponent][g.result]++
   })
 
-  const allData = Object.values(byOpponent).sort((a, b) => b.count - a.count)
+  const allData = Object.values(byOpponent)
+    .map(e => ({ ...e, total: e.W + e.D + e.L }))
+    .sort((a, b) => b.total - a.total)
+
   if (allData.length === 0) return null
 
-  const maxIdx = Math.max(0, allData.length - LOLLIPOP_VISIBLE)
-  const visible = allData.slice(startIdx, startIdx + LOLLIPOP_VISIBLE)
+  const maxIdx = Math.max(0, allData.length - CHART_VISIBLE)
+  const visible = allData.slice(startIdx, startIdx + CHART_VISIBLE)
 
   return (
     <div>
-      <ResponsiveContainer width="100%" height={240}>
-        <BarChart data={visible} margin={{ top: 24, right: 12, left: 12, bottom: 8 }}>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '14px' }}>
+        {[['W', 'Win', '#1a5c38'], ['D', 'Draw', '#d97706'], ['L', 'Loss', '#EF0107']].map(([key, label, color]) => (
+          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: color, flexShrink: 0 }} />
+            <span style={{ fontSize: '0.6em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.5)', letterSpacing: '1px' }}>{label}</span>
+          </div>
+        ))}
+      </div>
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={visible} margin={{ top: 8, right: 12, left: 12, bottom: 8 }}>
           <CartesianGrid vertical={false} stroke="rgba(239,1,7,0.07)" />
           <XAxis
             dataKey="label"
@@ -264,7 +262,14 @@ function OpponentLollipopChart({ games }) {
             tickFormatter={v => v.length > 11 ? v.slice(0, 10) + '…' : v}
           />
           <YAxis hide />
-          <Bar dataKey="count" shape={<LollipopShape />} isAnimationActive={false} barSize={36} />
+          <Tooltip
+            cursor={{ fill: 'rgba(239,1,7,0.04)' }}
+            contentStyle={{ fontFamily: 'Montserrat', fontSize: '11px', border: '1px solid rgba(239,1,7,0.15)', borderRadius: '3px', letterSpacing: '0.5px' }}
+            formatter={(value, name) => [value, name === 'W' ? 'Win' : name === 'D' ? 'Draw' : 'Loss']}
+          />
+          <Bar dataKey="W" stackId="a" fill="#1a5c38" isAnimationActive={false} />
+          <Bar dataKey="D" stackId="a" fill="#d97706" isAnimationActive={false} />
+          <Bar dataKey="L" stackId="a" fill="#EF0107" isAnimationActive={false} radius={[2, 2, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
       {maxIdx > 0 && (
