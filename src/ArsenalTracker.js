@@ -144,7 +144,6 @@ const arsenalStyles = `
   .ar-toggle-btn:last-child { border-radius: 0 2px 2px 0; }
 `
 
-const BAR_COLORS = ['#EF0107', '#9C824A', '#1a5c38', '#2563eb', '#7b68b0', '#d97706', '#c9607a']
 
 function ResultDonut({ games }) {
   const [tooltip, setTooltip] = useState(null)
