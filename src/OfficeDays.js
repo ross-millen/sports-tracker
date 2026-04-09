@@ -400,7 +400,7 @@ export default function OfficeDays({ onBack }) {
                 boxShadow: '0 2px 12px rgba(26,92,56,0.05)',
               }}>
                 <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: O.greenMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>
-                  Weekly Overview
+                  Monthly Overview
                 </div>
                 <OfficeHeatmap sessions={sessions} />
               </div>
