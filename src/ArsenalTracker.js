@@ -218,40 +218,6 @@ function ResultDonut({ games }) {
   )
 }
 
-function CompetitionBar({ games }) {
-  const [tooltip, setTooltip] = useState(null)
-  const counts = {}
-  games.forEach(g => { counts[g.competition] = (counts[g.competition] || 0) + 1 })
-  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([label, value]) => ({ label, value }))
-  if (entries.length === 0) return null
-  const max = Math.max(...entries.map(e => e.value))
-  const H = 140
-
-  return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', height: `${H + 40}px`, padding: '0 4px' }}>
-        {entries.map((e, i) => {
-          const barH = Math.max(8, (e.value / max) * H)
-          return (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: '0.58em', color: '#1a1a1a', marginBottom: '6px', fontFamily: 'Montserrat' }}>{e.value}</div>
-              <div style={{ width: '100%', height: `${barH}px`, background: BAR_COLORS[i % BAR_COLORS.length], borderRadius: '3px 3px 0 0', transition: 'opacity 0.2s', cursor: 'pointer' }}
-                onMouseMove={ev => setTooltip({ x: ev.clientX, y: ev.clientY, e })}
-                onMouseLeave={() => setTooltip(null)}
-              />
-              <div style={{ fontSize: '0.48em', color: '#1a1a1a', marginTop: '8px', fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', fontWeight: 700 }}>{e.label}</div>
-            </div>
-          )
-        })}
-      </div>
-      {tooltip && (
-        <div style={{ position: 'fixed', left: tooltip.x + 12, top: tooltip.y - 40, background: A.text, color: 'white', padding: '8px 12px', borderRadius: '3px', fontSize: '0.7em', fontFamily: 'Montserrat', letterSpacing: '1px', pointerEvents: 'none', zIndex: 1000, whiteSpace: 'nowrap' }}>
-          {tooltip.e.label} — {tooltip.e.value} game{tooltip.e.value !== 1 ? 's' : ''}
-        </div>
-      )}
-    </div>
-  )
-}
 
 const BUBBLE_COLORS = [
   '#EF0107', '#b30005', '#9C824A', '#1a5c38',
