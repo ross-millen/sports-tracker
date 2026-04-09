@@ -134,7 +134,7 @@ const BAR_COLORS = [
   '#5a6ebd', '#6aab7a', '#c4956a', '#8a6aad'
 ]
 
-function PushupDonutChart({ entries }) {
+function PushupDonutChart({ entries, colorMap }) {
   const [tooltip, setTooltip] = useState(null)
   if (entries.length === 0) return (
     <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px' }}>Not enough data yet.</p>
@@ -149,7 +149,7 @@ function PushupDonutChart({ entries }) {
     const angle = frac * 2 * Math.PI
     const startAngle = cumAngle
     cumAngle += angle
-    return { label: entry.label, value: entry.value, color: BAR_COLORS[i % BAR_COLORS.length], startAngle, endAngle: cumAngle, frac }
+    return { label: entry.label, value: entry.value, color: colorMap[entry.label], startAngle, endAngle: cumAngle, frac }
   })
 
   return (
@@ -225,7 +225,7 @@ function PushupDonutChart({ entries }) {
   )
 }
 
-function PushupBarChart({ entries }) {
+function PushupBarChart({ entries, colorMap }) {
   const [tooltip, setTooltip] = useState(null)
   if (entries.length === 0) return (
     <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px' }}>Not enough data yet.</p>
@@ -248,7 +248,7 @@ function PushupBarChart({ entries }) {
                 className="pu-bar-segment"
                 style={{
                   width: '100%', height: `${barH}px`,
-                  background: BAR_COLORS[i % BAR_COLORS.length],
+                  background: colorMap[entry.label],
                   borderRadius: '3px 3px 0 0',
                   animation: `puFadeUp 0.6s ease ${i * 0.1}s both`,
                 }}
@@ -377,9 +377,10 @@ export default function PushupTracker({ onBack }) {
     byTarget[key].reps += parseInt(s.count) || 0
     byTarget[key].sessions += 1
   })
-  const repsByTarget = Object.values(byTarget)
-    .sort((a, b) => b.reps - a.reps)
-    .map(v => ({ label: v.label, value: v.reps }))
+  const allTargets = Object.values(byTarget).sort((a, b) => b.reps - a.reps)
+  const colorMap = Object.fromEntries(allTargets.map((v, i) => [v.label, BAR_COLORS[i % BAR_COLORS.length]]))
+
+  const repsByTarget = allTargets.map(v => ({ label: v.label, value: v.reps }))
   const sessionsByTarget = Object.values(byTarget)
     .sort((a, b) => b.sessions - a.sessions)
     .map(v => ({ label: v.label, value: v.sessions }))
@@ -508,7 +509,7 @@ export default function PushupTracker({ onBack }) {
                   <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
                     Reps by Target Area
                   </div>
-                  <PushupDonutChart entries={repsByTarget} />
+                  <PushupDonutChart entries={repsByTarget} colorMap={colorMap} />
                 </div>
 
                 <div style={{
@@ -519,7 +520,7 @@ export default function PushupTracker({ onBack }) {
                   <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
                     Sessions by Target Area
                   </div>
-                  <PushupBarChart entries={sessionsByTarget} />
+                  <PushupBarChart entries={sessionsByTarget} colorMap={colorMap} />
                 </div>
               </>
             )}

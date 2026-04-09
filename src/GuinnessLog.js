@@ -183,6 +183,7 @@ export default function GuinnessLog({ onBack }) {
   const [editingId, setEditingId] = useState(null)
   const [editDate, setEditDate] = useState('')
   const [editCount, setEditCount] = useState('')
+  const [editLocation, setEditLocation] = useState('')
 
   const fetchSessions = async () => {
     const { data, error } = await supabase
@@ -214,10 +215,11 @@ export default function GuinnessLog({ onBack }) {
     setEditingId(s.id)
     setEditDate(s.date || '')
     setEditCount(s.count || '')
+    setEditLocation(s.location || '')
   }
 
   const cancelEdit = () => {
-    setEditingId(null); setEditDate(''); setEditCount('')
+    setEditingId(null); setEditDate(''); setEditCount(''); setEditLocation('')
   }
 
   const deleteSession = async (id) => {
@@ -229,7 +231,7 @@ export default function GuinnessLog({ onBack }) {
   const saveEdit = async (id) => {
     const { error } = await supabase
       .from('guinness_sessions')
-      .update({ date: editDate, count: parseInt(editCount) })
+      .update({ date: editDate, count: parseInt(editCount), location: editLocation || null })
       .eq('id', id)
     if (error) { alert('Error updating: ' + error.message) } else { setEditingId(null); fetchSessions() }
   }
@@ -406,9 +408,13 @@ export default function GuinnessLog({ onBack }) {
                             <div style={editLabelStyle}>Date</div>
                             <input className="gu-inline-input" type="date" value={editDate} onChange={e => setEditDate(e.target.value)} />
                           </div>
-                          <div style={{ marginBottom: '16px' }}>
+                          <div style={{ marginBottom: '12px' }}>
                             <div style={editLabelStyle}>Pints</div>
                             <input className="gu-inline-input" type="number" value={editCount} onChange={e => setEditCount(e.target.value)} />
+                          </div>
+                          <div style={{ marginBottom: '16px' }}>
+                            <div style={editLabelStyle}>Location</div>
+                            <input className="gu-inline-input" type="text" value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="Optional" />
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <button className="gu-delete-btn" onClick={() => deleteSession(session.id)}>Delete</button>
@@ -432,8 +438,13 @@ export default function GuinnessLog({ onBack }) {
                             {formatUKDate(session.date)}
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: G.cream, fontWeight: 600, lineHeight: 1.1 }}>
-                              {session.count} pints
+                            <div>
+                              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: G.cream, fontWeight: 600, lineHeight: 1.1 }}>
+                                {session.count} pints
+                              </div>
+                              {session.location && (
+                                <div style={{ color: G.creamMuted, fontSize: '0.62em', letterSpacing: '2px', textTransform: 'uppercase', marginTop: '6px' }}>{session.location}</div>
+                              )}
                             </div>
                             <button className="gu-edit-btn" onClick={() => startEdit(session)}>Edit</button>
                           </div>
