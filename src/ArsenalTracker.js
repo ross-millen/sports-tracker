@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts'
 
 const A = {
   red: '#EF0107',
@@ -219,10 +218,8 @@ function ResultDonut({ games }) {
 }
 
 
-const CHART_VISIBLE = 8
-
-function OpponentLollipopChart({ games }) {
-  const [startIdx, setStartIdx] = useState(0)
+function OpponentResultBars({ games }) {
+  const [hovered, setHovered] = useState(null)
 
   const byOpponent = {}
   games.forEach(g => {
@@ -231,63 +228,83 @@ function OpponentLollipopChart({ games }) {
     if (g.result) byOpponent[g.opponent][g.result]++
   })
 
-  const allData = Object.values(byOpponent)
+  const data = Object.values(byOpponent)
     .map(e => ({ ...e, total: e.W + e.D + e.L }))
     .sort((a, b) => b.total - a.total)
 
-  if (allData.length === 0) return null
+  if (data.length === 0) return null
 
-  const maxIdx = Math.max(0, allData.length - CHART_VISIBLE)
-  const visible = allData.slice(startIdx, startIdx + CHART_VISIBLE)
+  const maxTotal = data[0].total
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '14px' }}>
-        {[['W', 'Win', '#1a5c38'], ['D', 'Draw', '#d97706'], ['L', 'Loss', '#EF0107']].map(([key, label, color]) => (
-          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: color, flexShrink: 0 }} />
-            <span style={{ fontSize: '0.6em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.5)', letterSpacing: '1px' }}>{label}</span>
-          </div>
-        ))}
-      </div>
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={visible} margin={{ top: 8, right: 12, left: 12, bottom: 8 }}>
-          <CartesianGrid vertical={false} stroke="rgba(239,1,7,0.07)" />
-          <XAxis
-            dataKey="label"
-            axisLine={false}
-            tickLine={false}
-            interval={0}
-            tick={{ fontSize: 10, fontFamily: 'Montserrat', fill: 'rgba(26,0,0,0.6)', fontWeight: 500 }}
-            tickFormatter={v => v.length > 11 ? v.slice(0, 10) + '…' : v}
-          />
-          <YAxis hide />
-          <Tooltip
-            cursor={{ fill: 'rgba(239,1,7,0.04)' }}
-            contentStyle={{ fontFamily: 'Montserrat', fontSize: '11px', border: '1px solid rgba(239,1,7,0.15)', borderRadius: '3px', letterSpacing: '0.5px' }}
-            formatter={(value, name) => [value, name === 'W' ? 'Win' : name === 'D' ? 'Draw' : 'Loss']}
-          />
-          <Bar dataKey="W" stackId="a" fill="#1a5c38" isAnimationActive={false} />
-          <Bar dataKey="D" stackId="a" fill="#d97706" isAnimationActive={false} />
-          <Bar dataKey="L" stackId="a" fill="#EF0107" isAnimationActive={false} radius={[2, 2, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
-      {maxIdx > 0 && (
-        <div style={{ paddingTop: '4px' }}>
-          <input
-            type="range"
-            min={0}
-            max={maxIdx}
-            value={startIdx}
-            onChange={e => setStartIdx(Number(e.target.value))}
-            style={{ width: '100%', accentColor: '#EF0107', cursor: 'pointer' }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-            <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.3)', letterSpacing: '1px' }}>Most seen</span>
-            <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.3)', letterSpacing: '1px' }}>Least seen</span>
-          </div>
+      {/* Legend + column header */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '14px', paddingBottom: '10px', borderBottom: '1px solid rgba(239,1,7,0.07)' }}>
+        <div style={{ width: '130px', flexShrink: 0 }} />
+        <div style={{ flex: 1, display: 'flex', gap: '14px' }}>
+          {[['Win', '#1a5c38'], ['Draw', '#d97706'], ['Loss', '#EF0107']].map(([label, color]) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: color, flexShrink: 0 }} />
+              <span style={{ fontSize: '0.52em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.4)', letterSpacing: '1px', textTransform: 'uppercase' }}>{label}</span>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
+
+      {data.map(e => {
+        const wPct = e.total ? (e.W / e.total) * 100 : 0
+        const dPct = e.total ? (e.D / e.total) * 100 : 0
+        const lPct = e.total ? (e.L / e.total) * 100 : 0
+        const barWidthPct = (e.total / maxTotal) * 100
+        const isHov = hovered === e.label
+
+        return (
+          <div key={e.label}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '9px', cursor: 'default' }}
+            onMouseEnter={() => setHovered(e.label)}
+            onMouseLeave={() => setHovered(null)}
+          >
+            {/* Name */}
+            <div style={{
+              width: '130px', flexShrink: 0,
+              fontSize: '0.67em', fontFamily: 'Montserrat', fontWeight: isHov ? 600 : 500,
+              color: isHov ? A.text : 'rgba(26,0,0,0.6)',
+              transition: 'color 0.15s, font-weight 0.15s',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              letterSpacing: '0.3px',
+            }}>
+              {e.label}
+            </div>
+
+            {/* Bar track — width encodes frequency, segments encode W/D/L proportion */}
+            <div style={{ flex: 1, height: '12px', background: 'rgba(239,1,7,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{
+                display: 'flex', height: '100%',
+                width: `${barWidthPct}%`,
+                opacity: isHov ? 1 : 0.8,
+                transition: 'opacity 0.15s',
+              }}>
+                {wPct > 0 && <div style={{ width: `${wPct}%`, background: '#1a5c38', transition: 'width 0.3s' }} />}
+                {dPct > 0 && <div style={{ width: `${dPct}%`, background: '#d97706' }} />}
+                {lPct > 0 && <div style={{ width: `${lPct}%`, background: '#EF0107' }} />}
+              </div>
+            </div>
+
+            {/* Stats — flips on hover */}
+            <div style={{ width: '72px', flexShrink: 0, textAlign: 'right', transition: 'all 0.15s' }}>
+              {isHov ? (
+                <span style={{ fontSize: '0.6em', fontFamily: 'Montserrat', fontWeight: 600, color: A.text, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                  {e.W}W&nbsp;&nbsp;{e.D}D&nbsp;&nbsp;{e.L}L
+                </span>
+              ) : (
+                <span style={{ fontSize: '0.57em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.32)', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                  {e.total} game{e.total !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -533,7 +550,7 @@ export default function ArsenalTracker({ onBack }) {
                 {/* Opponents lollipop chart */}
                 <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
                   <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Opponents</div>
-                  <OpponentLollipopChart games={games} />
+                  <OpponentResultBars games={games} />
                 </div>
 
               </>
