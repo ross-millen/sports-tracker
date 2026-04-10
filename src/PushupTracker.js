@@ -323,7 +323,7 @@ function FlameStreak({ value }) {
         transform: 'translateY(-50%)',
         textAlign: 'center', fontFamily: "'Cormorant Garamond', serif",
         fontSize: '1.5em', fontWeight: 700,
-        lineHeight: 1,
+        lineHeight: 1, zIndex: 10,
       }}>
         {value}
       </div>
