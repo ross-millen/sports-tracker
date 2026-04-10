@@ -22,6 +22,14 @@ const globalStyles = `
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  @keyframes slideOutRight {
+    from { transform: translateX(0); }
+    to   { transform: translateX(100%); }
+  }
   @keyframes shimmer {
     0% { background-position: -200% center; }
     100% { background-position: 200% center; }
@@ -147,18 +155,29 @@ const globalStyles = `
 
 function App() {
   const [tracker, setTracker] = useState('home')
+  const [closing, setClosing] = useState(false)
+
+  const openTracker = (key) => {
+    setClosing(false)
+    setTracker(key)
+  }
+
+  const closeTracker = () => {
+    setClosing(true)
+    setTimeout(() => { setTracker('home'); setClosing(false) }, 280)
+  }
 
   return (
     <>
       <style>{globalStyles}</style>
+
+      {/* Home page — always in the background */}
       <div style={{
         minHeight: '100vh',
         background: 'linear-gradient(160deg, #f5f0eb 0%, #ede4d8 100%)',
         padding: '0 20px 60px',
         fontFamily: "'Montserrat', sans-serif",
       }}>
-
-        {/* Header */}
         <div className="fade-up" style={{ textAlign: 'center', padding: '50px 0 40px' }}>
           <h1 style={{
             fontFamily: "'Cormorant Garamond', serif",
@@ -180,7 +199,7 @@ function App() {
             ].map(item => (
               <button
                 key={item.key}
-                onClick={() => setTracker(item.key)}
+                onClick={() => openTracker(item.key)}
                 style={{
                   background: 'none', border: '1px solid rgba(139,0,0,0.2)', cursor: 'pointer',
                   color: 'rgba(80,20,20,0.5)', fontSize: '0.68em', letterSpacing: '4px',
@@ -196,15 +215,28 @@ function App() {
             ))}
           </div>
         </div>
-
-        <div style={{ maxWidth: '480px', margin: '0 auto' }}>
-          {tracker === 'arsenal'  && <ArsenalTracker onBack={() => setTracker('home')} />}
-          {tracker === 'guinness' && <GuinnessLog    onBack={() => setTracker('home')} />}
-          {tracker === 'pushups'  && <PushupTracker  onBack={() => setTracker('home')} />}
-          {tracker === 'office'   && <OfficeDays     onBack={() => setTracker('home')} />}
-          {tracker === 'football' && <FootballLog    onBack={() => setTracker('home')} />}
-        </div>
       </div>
+
+      {/* Tracker overlay — slides in from right, slides out to right */}
+      {tracker !== 'home' && (
+        <div
+          key={tracker}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 10,
+            background: 'linear-gradient(160deg, #f5f0eb 0%, #ede4d8 100%)',
+            overflowY: 'auto',
+            padding: '40px 20px 60px',
+            fontFamily: "'Montserrat', sans-serif",
+            animation: `${closing ? 'slideOutRight' : 'slideInRight'} 0.28s ease forwards`,
+          }}
+        >
+          {tracker === 'arsenal'  && <ArsenalTracker onBack={closeTracker} />}
+          {tracker === 'guinness' && <GuinnessLog    onBack={closeTracker} />}
+          {tracker === 'pushups'  && <PushupTracker  onBack={closeTracker} />}
+          {tracker === 'office'   && <OfficeDays     onBack={closeTracker} />}
+          {tracker === 'football' && <FootballLog    onBack={closeTracker} />}
+        </div>
+      )}
     </>
   )
 }
