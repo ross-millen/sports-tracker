@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabase'
 
 const G = {
@@ -15,9 +15,13 @@ const G = {
 
 function GuinnessLineChart({ sessions, formatUKDate }) {
   const [tooltip, setTooltip] = useState(null)
-  const points = [...sessions]
-    .sort((a, b) => a.date > b.date ? 1 : -1)
-    .map(s => ({ date: formatUKDate(s.date), value: parseInt(s.count) || 0 }))
+  const byDay = {}
+  for (const s of sessions) {
+    byDay[s.date] = (byDay[s.date] || 0) + (parseInt(s.count) || 0)
+  }
+  const points = Object.keys(byDay)
+    .sort()
+    .map(date => ({ date: formatUKDate(date), value: byDay[date] }))
 
   if (points.length < 2) return null
 
@@ -43,15 +47,32 @@ function GuinnessLineChart({ sessions, formatUKDate }) {
         </defs>
         <path d={areaPath} fill="url(#guGrad)" />
         <path d={linePath} fill="none" stroke={G.gold} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-        {points.map((p, i) => (
-          <circle
-            key={i} cx={x(i)} cy={y(p.value)} r="3"
-            fill={G.gold} stroke={G.surface} strokeWidth="1.5"
-            style={{ cursor: 'pointer' }}
-            onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, p })}
-            onMouseLeave={() => setTooltip(null)}
-          />
-        ))}
+        {points.map((p, i) => {
+          const cx = x(i), cy = y(p.value)
+          const labelY = cy - 8 < padY + 4 ? cy + 14 : cy - 8
+          return (
+            <g key={i}>
+              <circle
+                cx={cx} cy={cy} r="3"
+                fill={G.gold} stroke={G.surface} strokeWidth="1.5"
+                style={{ cursor: 'pointer' }}
+                onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, p })}
+                onMouseLeave={() => setTooltip(null)}
+              />
+              <text
+                x={cx} y={labelY}
+                textAnchor="middle"
+                fill={G.gold}
+                fontSize="8"
+                fontFamily="Montserrat"
+                fontWeight="600"
+                style={{ pointerEvents: 'none' }}
+              >
+                {p.value}
+              </text>
+            </g>
+          )
+        })}
       </svg>
       {tooltip && (
         <div style={{
@@ -63,6 +84,166 @@ function GuinnessLineChart({ sessions, formatUKDate }) {
           border: `1px solid ${G.goldFaint}`,
         }}>
           {tooltip.p.date} — {tooltip.p.value} pints
+        </div>
+      )}
+    </div>
+  )
+}
+
+const BUBBLE_COLORS = [
+  '#c9a452', '#8faa5a', '#4a90a4', '#c4756b',
+  '#7b68b0', '#d4956a', '#6aab7a', '#c9607a',
+]
+
+function GoldBubbleChart({ data }) {
+  const [tooltip, setTooltip] = useState(null)
+  const containerRef = useRef(null)
+  const animRef = useRef(null)
+  const stateRef = useRef([])
+  const [positions, setPositions] = useState([])
+
+  const entries = Object.values(data).sort((a, b) => b.pints - a.pints)
+  const maxPints = entries.length > 0 ? entries[0].pints : 1
+  const sizes = entries.map(e => Math.round(80 + Math.sqrt(e.pints / maxPints) * 35))
+  const sizesRef = useRef(sizes)
+  sizesRef.current = sizes
+
+  const resolveCollisions = (bs, W2, H2) => {
+    for (let pass = 0; pass < 5; pass++) {
+      for (let i = 0; i < bs.length; i++) {
+        for (let j = i + 1; j < bs.length; j++) {
+          const ri = sizesRef.current[i] / 2, rj = sizesRef.current[j] / 2
+          const dx = (bs[j].x + rj) - (bs[i].x + ri)
+          const dy = (bs[j].y + rj) - (bs[i].y + ri)
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
+          const minDist = ri + rj
+          if (dist < minDist) {
+            const nx = dx / dist, ny = dy / dist
+            const push = (minDist - dist) / 2
+            bs[i].x -= nx * push; bs[i].y -= ny * push
+            bs[j].x += nx * push; bs[j].y += ny * push
+            const di = sizesRef.current[i], dj = sizesRef.current[j]
+            bs[i].x = Math.max(0, Math.min(W2 - di, bs[i].x))
+            bs[i].y = Math.max(0, Math.min(H2 - di, bs[i].y))
+            bs[j].x = Math.max(0, Math.min(W2 - dj, bs[j].x))
+            bs[j].y = Math.max(0, Math.min(H2 - dj, bs[j].y))
+          }
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!containerRef.current || entries.length === 0) return
+    const W = containerRef.current.offsetWidth
+    const H = 260
+    stateRef.current = entries.map((_, i) => {
+      const d = sizesRef.current[i]
+      return {
+        x: Math.random() * Math.max(1, W - d),
+        y: Math.random() * Math.max(1, H - d),
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+      }
+    })
+    resolveCollisions(stateRef.current, W, H)
+
+    const tick = () => {
+      const W2 = containerRef.current ? containerRef.current.offsetWidth : W
+      const H2 = 260
+      const bs = stateRef.current.map(b => ({ ...b }))
+      for (let i = 0; i < bs.length; i++) { bs[i].x += bs[i].vx; bs[i].y += bs[i].vy }
+      for (let i = 0; i < bs.length; i++) {
+        const d = sizesRef.current[i]
+        if (bs[i].x <= 0) { bs[i].x = 0; bs[i].vx = Math.abs(bs[i].vx) }
+        if (bs[i].x + d >= W2) { bs[i].x = W2 - d; bs[i].vx = -Math.abs(bs[i].vx) }
+        if (bs[i].y <= 0) { bs[i].y = 0; bs[i].vy = Math.abs(bs[i].vy) }
+        if (bs[i].y + d >= H2) { bs[i].y = H2 - d; bs[i].vy = -Math.abs(bs[i].vy) }
+      }
+      for (let i = 0; i < bs.length; i++) {
+        for (let j = i + 1; j < bs.length; j++) {
+          const ri = sizesRef.current[i] / 2, rj = sizesRef.current[j] / 2
+          const dx = (bs[j].x + rj) - (bs[i].x + ri)
+          const dy = (bs[j].y + rj) - (bs[i].y + ri)
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
+          const minDist = ri + rj
+          if (dist < minDist) {
+            const nx = dx / dist, ny = dy / dist
+            const push = (minDist - dist) / 2
+            bs[i].x -= nx * push; bs[i].y -= ny * push
+            bs[j].x += nx * push; bs[j].y += ny * push
+            const dvn = (bs[j].vx - bs[i].vx) * nx + (bs[j].vy - bs[i].vy) * ny
+            if (dvn < 0) {
+              bs[i].vx += dvn * nx; bs[i].vy += dvn * ny
+              bs[j].vx -= dvn * nx; bs[j].vy -= dvn * ny
+            }
+          }
+        }
+      }
+      stateRef.current = bs
+      setPositions(bs.map(b => ({ x: b.x, y: b.y })))
+      animRef.current = requestAnimationFrame(tick)
+    }
+    animRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(animRef.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries.length])
+
+  if (entries.length === 0) return null
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', height: '260px', overflow: 'hidden', borderRadius: '4px' }}>
+      {entries.map((e, i) => {
+        const pos = positions[i] || { x: 0, y: 0 }
+        const d = sizes[i]
+        const fontSize = Math.max(9, Math.floor(d * 0.11))
+        return (
+          <div
+            key={e.label}
+            style={{
+              position: 'absolute',
+              left: `${pos.x}px`, top: `${pos.y}px`,
+              width: `${d}px`, height: `${d}px`,
+              borderRadius: '50%',
+              background: BUBBLE_COLORS[i % BUBBLE_COLORS.length],
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              opacity: 0.9,
+              boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+              cursor: 'default', userSelect: 'none',
+            }}
+            onMouseMove={ev => setTooltip({ x: ev.clientX, y: ev.clientY, e })}
+            onMouseLeave={() => setTooltip(null)}
+          >
+            <div style={{
+              fontSize: `${fontSize}px`,
+              color: G.bg, fontFamily: 'Montserrat', fontWeight: 700,
+              letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1.25,
+              maxWidth: `${Math.floor(d * 0.78)}px`,
+              overflowWrap: 'break-word',
+            }}>
+              {e.label}
+            </div>
+            <div style={{
+              fontSize: `${Math.max(7, Math.floor(fontSize * 0.85))}px`,
+              color: 'rgba(13,12,11,0.65)', fontFamily: 'Montserrat',
+              fontWeight: 600, letterSpacing: '0.5px', marginTop: '2px',
+            }}>
+              {e.pints}p
+            </div>
+          </div>
+        )
+      })}
+      {tooltip && (
+        <div style={{
+          position: 'fixed', left: tooltip.x + 12, top: tooltip.y - 40,
+          background: G.bg, color: G.cream, padding: '8px 12px',
+          borderRadius: '3px', fontSize: '0.7em', fontFamily: 'Montserrat',
+          letterSpacing: '1px', pointerEvents: 'none', zIndex: 1000,
+          whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+          border: `1px solid ${G.goldFaint}`,
+        }}>
+          {tooltip.e.label} — {tooltip.e.pints} pint{tooltip.e.pints !== 1 ? 's' : ''} · {tooltip.e.sessions} session{tooltip.e.sessions !== 1 ? 's' : ''}
         </div>
       )}
     </div>
@@ -253,6 +434,15 @@ export default function GuinnessLog({ onBack }) {
   const bestDay = bestDayEntry?.pints || 0
   const bestDayDate = bestDayEntry ? formatUKDate(bestDayEntry.date) : ''
 
+  const locationData = {}
+  sessions.filter(s => s.location).forEach(s => {
+    const key = s.location.trim().toLowerCase()
+    const label = s.location.trim()
+    if (!locationData[key]) locationData[key] = { label, pints: 0, sessions: 0 }
+    locationData[key].pints += parseInt(s.count) || 0
+    locationData[key].sessions += 1
+  })
+
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: G.creamMuted,
     textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500,
@@ -378,6 +568,19 @@ export default function GuinnessLog({ onBack }) {
                     Pints Over Time
                   </div>
                   <GuinnessLineChart sessions={sessions} formatUKDate={formatUKDate} />
+                </div>
+              )}
+
+              {Object.keys(locationData).length > 0 && (
+                <div style={{
+                  background: G.surface, border: `1px solid rgba(201,164,82,0.1)`,
+                  borderRadius: '4px', padding: '24px', marginBottom: '28px',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+                }}>
+                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: G.goldMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>
+                    Locations
+                  </div>
+                  <GoldBubbleChart data={locationData} />
                 </div>
               )}
 

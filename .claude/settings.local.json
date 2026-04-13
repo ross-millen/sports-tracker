@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm start:*)",
+      "Bash(npx react-scripts:*)",
+      "Bash(CI=true npx react-scripts build)",
+      "Bash(git remote:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Read(//c/Users/rossm/**)",
+      "Bash(npx create-expo-app@latest RossTracker --template blank)"
+    ]
+  }
+}
