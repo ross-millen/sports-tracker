@@ -401,9 +401,14 @@ export default function PushupTracker({ onBack }) {
   }
 
   const totalReps = sessions.reduce((sum, s) => sum + (parseInt(s.count) || 0), 0)
-  const bestSetSession = sessions.reduce((best, s) => (parseInt(s.count) || 0) > (parseInt(best?.count) || 0) ? s : best, null)
-  const bestSet = bestSetSession?.count || 0
-  const bestSetDate = bestSetSession ? formatUKDate(bestSetSession.date) : ''
+  const repsByDate = {}
+  sessions.forEach(s => {
+    if (!s.date) return
+    repsByDate[s.date] = (repsByDate[s.date] || 0) + (parseInt(s.count) || 0)
+  })
+  const bestDayEntry = Object.entries(repsByDate).reduce((best, [date, reps]) => reps > (best?.reps || 0) ? { date, reps } : best, null)
+  const bestDay = bestDayEntry?.reps || 0
+  const bestDayDate = bestDayEntry ? formatUKDate(bestDayEntry.date) : ''
 
   const uniqueDates = [...new Set(sessions.map(s => s.date))].sort((a, b) => b > a ? 1 : -1)
   const localDate = (offset = 0) => {
@@ -541,7 +546,7 @@ export default function PushupTracker({ onBack }) {
                   {[
                     { label: 'Total Reps', value: totalReps.toLocaleString() },
                     { label: 'Total Days', value: uniqueDates.length },
-                    { label: 'Best Set', value: bestSet, sub: bestSetDate },
+                    { label: 'Best Day', value: bestDay, sub: bestDayDate },
                     { label: 'Day Streak', value: streak },
                   ].map(kpi => (
                     <div key={kpi.label} style={{
