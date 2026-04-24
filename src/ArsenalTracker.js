@@ -432,7 +432,7 @@ export default function ArsenalTracker({ onBack }) {
         {/* Back */}
         <div style={{ marginBottom: '24px' }}>
           <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', color: A.textMuted, fontSize: '0.6em', letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'Montserrat', fontWeight: 500, padding: 0 }}>
-            ← Ross' Tracker
+            ← home
           </button>
         </div>
 

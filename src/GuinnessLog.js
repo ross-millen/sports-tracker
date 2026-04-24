@@ -471,7 +471,7 @@ export default function GuinnessLog({ onBack }) {
                 padding: 0,
               }}
             >
-              ← Ross' Tracker
+              ← home
             </button>
           </div>
 

@@ -420,7 +420,7 @@ export default function PushupTracker({ onBack }) {
               padding: 0,
             }}
           >
-            ← Ross' Tracker
+            ← home
           </button>
         </div>
 

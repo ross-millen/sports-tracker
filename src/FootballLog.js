@@ -401,7 +401,7 @@ export default function FootballLog({ onBack }) {
             padding: 0,
           }}
         >
-          ← Ross' Tracker
+          ← home
         </button>
       </div>
 
