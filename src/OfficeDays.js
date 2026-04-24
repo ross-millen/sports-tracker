@@ -485,8 +485,18 @@ export default function OfficeDays({ onBack }) {
                         onMouseOut={e => { e.currentTarget.style.boxShadow = '0 1px 8px rgba(26,92,56,0.05)'; e.currentTarget.style.borderColor = 'rgba(26,92,56,0.07)' }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: O.text, fontWeight: 600, lineHeight: 1.1 }}>
-                            {formatUKDate(session.date)}
+                          <div>
+                            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: O.text, fontWeight: 600, lineHeight: 1.1 }}>
+                              {formatUKDate(session.date)}
+                            </div>
+                            <div style={{ marginTop: '6px' }}>
+                              {session.annual_leave
+                                ? <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '2px', color: 'white', background: '#f59e0b', padding: '2px 8px', borderRadius: '2px' }}>Annual leave</span>
+                                : session.wfh_approved
+                                ? <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '2px', color: 'white', background: '#7c3aed', padding: '2px 8px', borderRadius: '2px' }}>Approved work from home</span>
+                                : <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '2px', color: 'white', background: O.green, padding: '2px 8px', borderRadius: '2px' }}>In office</span>
+                              }
+                            </div>
                           </div>
                           <button className="of-edit-btn" onClick={() => startEdit(session)}>Edit</button>
                         </div>
