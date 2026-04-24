@@ -194,13 +194,6 @@ function OfficeHeatmap({ sessions }) {
         {/* Week rows */}
         {weeks.map((week, wi) => {
           const weekdaysInMonth = week.slice(0, 5).filter(d => d.getMonth() === month)
-          const officeCount = weekdaysInMonth.filter(d => officeDates.has(fmt(d)) || wfhDates.has(fmt(d))).length
-          const hasWeekdays = weekdaysInMonth.length > 0
-          const indicatorColor = !hasWeekdays ? 'transparent'
-            : officeCount >= 3 ? '#1a5c38'
-            : officeCount >= 1 ? '#d97706'
-            : '#dc2626'
-
           return (
             <div key={wi} style={{ marginBottom: '3px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '3px' }}>
