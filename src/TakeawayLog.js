@@ -95,6 +95,17 @@ const takeawayStyles = `
   }
   .ta-delete-btn:hover { background: #92400e; color: white; border-color: #92400e; }
 
+  .ta-toggle-btn {
+    flex: 1; padding: 8px 4px; border: 1px solid rgba(146,64,14,0.2);
+    background: transparent; color: rgba(28,10,0,0.4);
+    font-family: 'Montserrat', sans-serif; font-size: 0.58em;
+    letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+    transition: all 0.2s ease; font-weight: 500;
+  }
+  .ta-toggle-btn.selected { background: #92400e; color: white; border-color: #92400e; }
+  .ta-toggle-btn:first-child { border-radius: 2px 0 0 2px; }
+  .ta-toggle-btn:last-child { border-radius: 0 2px 2px 0; }
+
   .ta-kpi-shimmer {
     background: linear-gradient(90deg, #92400e, #d97706, #92400e);
     background-size: 200% auto;
@@ -103,6 +114,104 @@ const takeawayStyles = `
   }
 `
 
+
+const TA_COLORS = [
+  '#c4756b', '#4a90a4', '#d4956a', '#7b68b0',
+  '#6aab7a', '#c9607a', '#8faa5a', '#c4956a',
+]
+
+function TaDonutChart({ data }) {
+  const [tooltip, setTooltip] = useState(null)
+  const entries = Object.entries(data).sort((a, b) => b[1].count - a[1].count)
+  if (entries.length === 0) return null
+
+  const total = entries.reduce((s, [, v]) => s + v.count, 0)
+  const R = 80, cx = 110, cy = 95, stroke = 28
+  let cumAngle = -Math.PI / 2
+
+  const slices = entries.map(([key, val], i) => {
+    const name = val.label || key
+    const frac = val.count / total
+    const angle = frac * 2 * Math.PI
+    const x1 = cx + R * Math.cos(cumAngle)
+    const y1 = cy + R * Math.sin(cumAngle)
+    cumAngle += angle
+    const x2 = cx + R * Math.cos(cumAngle)
+    const y2 = cy + R * Math.sin(cumAngle)
+    const large = angle > Math.PI ? 1 : 0
+    return { name, val, color: TA_COLORS[i % TA_COLORS.length], x1, y1, x2, y2, large, frac }
+  })
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+        <svg viewBox="0 0 220 190" style={{ width: '180px', flexShrink: 0 }}>
+          {slices.map((s, i) => {
+            const startAngle = i === 0 ? -Math.PI / 2 : slices.slice(0, i).reduce((a, sl) => a + sl.frac * 2 * Math.PI, -Math.PI / 2)
+            const endAngle = startAngle + s.frac * 2 * Math.PI
+            const x1 = cx + R * Math.cos(startAngle)
+            const y1 = cy + R * Math.sin(startAngle)
+            const x2 = cx + R * Math.cos(endAngle)
+            const y2 = cy + R * Math.sin(endAngle)
+            const large = s.frac > 0.5 ? 1 : 0
+            return (
+              <path key={i}
+                d={`M ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2}`}
+                fill="none" stroke={s.color} strokeWidth={stroke} strokeLinecap="butt"
+                style={{ cursor: 'pointer', transition: 'opacity 0.2s ease' }}
+                onMouseOver={e => { e.target.style.opacity = '0.8' }}
+                onMouseOut={e => { e.target.style.opacity = '1' }}
+                onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, s })}
+                onMouseLeave={() => setTooltip(null)}
+              />
+            )
+          })}
+          {slices.map((s, i) => {
+            const boundaryAngle = i === 0 ? -Math.PI / 2 : slices.slice(0, i).reduce((a, sl) => a + sl.frac * 2 * Math.PI, -Math.PI / 2)
+            const inner = R - stroke / 2, outer = R + stroke / 2
+            return (
+              <line key={i}
+                x1={cx + inner * Math.cos(boundaryAngle)} y1={cy + inner * Math.sin(boundaryAngle)}
+                x2={cx + outer * Math.cos(boundaryAngle)} y2={cy + outer * Math.sin(boundaryAngle)}
+                stroke="black" strokeWidth="1.5"
+              />
+            )
+          })}
+          <circle cx={cx} cy={cy} r={R - stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
+          <circle cx={cx} cy={cy} r={R + stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
+          <text x={cx} y={cy - 8} textAnchor="middle" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', fill: '#1c0a00', fontWeight: 600 }}>
+            {total}
+          </text>
+          <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontFamily: 'Montserrat', fontSize: '7px', fill: '#1c0a00', letterSpacing: '2px', fontWeight: 700 }}>
+            ORDERS
+          </text>
+        </svg>
+
+        <div style={{ flex: 1, minWidth: '100px' }}>
+          {slices.map((s, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: s.color, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '0.7em', color: '#1c0a00', fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>{s.name}</div>
+                <div style={{ fontSize: '0.5em', color: 'rgba(28,10,0,0.4)', letterSpacing: '1px', fontFamily: 'Montserrat' }}>
+                  {s.val.count} order{s.val.count !== 1 ? 's' : ''}
+                </div>
+              </div>
+              <div style={{ fontSize: '0.6em', color: 'rgba(28,10,0,0.4)', fontFamily: 'Montserrat', fontWeight: 600 }}>
+                {Math.round(s.frac * 100)}%
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {tooltip && (
+        <div className="tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
+          {tooltip.s.name} — {tooltip.s.val.count} order{tooltip.s.val.count !== 1 ? 's' : ''} · {Math.round(tooltip.s.frac * 100)}%
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function TakeawayLog({ onBack }) {
   const [page, setPage] = useState('log')
@@ -187,6 +296,14 @@ export default function TakeawayLog({ onBack }) {
   orders.forEach(o => {
     if (o.restaurant) restaurantCounts[o.restaurant] = (restaurantCounts[o.restaurant] || 0) + 1
   })
+  const deliveryAppData = {}
+  orders.forEach(o => {
+    if (o.delivery_app) {
+      if (!deliveryAppData[o.delivery_app]) deliveryAppData[o.delivery_app] = { label: o.delivery_app, count: 0 }
+      deliveryAppData[o.delivery_app].count++
+    }
+  })
+
   const rankedRestaurants = Object.entries(restaurantCounts).sort((a, b) => b[1] - a[1])
   const highestOrder = orders.length ? Math.max(...orders.map(o => parseFloat(o.price) || 0)) : 0
   const podium = [rankedRestaurants[1], rankedRestaurants[0], rankedRestaurants[2]]
@@ -254,10 +371,11 @@ export default function TakeawayLog({ onBack }) {
 
             <div style={{ marginBottom: '24px' }}>
               <div style={labelStyle}>Delivery App</div>
-              <select className="ta-input" value={deliveryApp} onChange={e => setDeliveryApp(e.target.value)} style={{ cursor: 'pointer' }}>
-                <option value="">— select app —</option>
-                {DELIVERY_APPS.map(app => <option key={app} value={app}>{app}</option>)}
-              </select>
+              <div style={{ display: 'flex' }}>
+                {DELIVERY_APPS.map(app => (
+                  <button key={app} className={`ta-toggle-btn ${deliveryApp === app ? 'selected' : ''}`} onClick={() => setDeliveryApp(deliveryApp === app ? '' : app)}>{app}</button>
+                ))}
+              </div>
             </div>
 
             {isMcDonalds && (
@@ -346,6 +464,14 @@ export default function TakeawayLog({ onBack }) {
                   </div>
                 )}
 
+                {/* Delivery app donut */}
+                {Object.keys(deliveryAppData).length > 0 && (
+                  <div style={{ background: 'white', border: '1px solid rgba(146,64,14,0.1)', borderRadius: '4px', padding: '20px', marginBottom: '28px', boxShadow: '0 2px 12px rgba(146,64,14,0.05)' }}>
+                    <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: T.orangeMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Delivery App</div>
+                    <TaDonutChart data={deliveryAppData} />
+                  </div>
+                )}
+
                 {/* Entries */}
                 <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(146,64,14,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(146,64,14,0.05)' }}>
                   <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: T.orangeMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries</span>
@@ -376,10 +502,11 @@ export default function TakeawayLog({ onBack }) {
                             </div>
                             <div style={{ marginBottom: '16px' }}>
                               <div style={editLabelStyle}>Delivery App</div>
-                              <select className="ta-inline-input" value={editDeliveryApp} onChange={e => setEditDeliveryApp(e.target.value)} style={{ cursor: 'pointer' }}>
-                                <option value="">— none —</option>
-                                {DELIVERY_APPS.map(app => <option key={app} value={app}>{app}</option>)}
-                              </select>
+                              <div style={{ display: 'flex', marginTop: '6px' }}>
+                                {DELIVERY_APPS.map(app => (
+                                  <button key={app} className={`ta-toggle-btn ${editDeliveryApp === app ? 'selected' : ''}`} onClick={() => setEditDeliveryApp(editDeliveryApp === app ? '' : app)}>{app}</button>
+                                ))}
+                              </div>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <button className="ta-delete-btn" onClick={() => deleteOrder(order.id)}>Delete</button>
