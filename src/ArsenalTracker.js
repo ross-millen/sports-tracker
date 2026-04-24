@@ -21,7 +21,7 @@ const CARABAO_STAGES = ['Round 1', 'Round 2', 'Round 3', 'Round 4', 'Quarter Fin
 const VENUES = ['Home', 'Away', 'Neutral']
 const RESULTS = ['W', 'D', 'L']
 
-const resultColor = { W: '#6aab7a', D: '#d4a86a', L: '#c4756b' }
+const resultColor = { W: '#1a5c38', D: '#d97706', L: '#EF0107' }
 const resultLabel = { W: 'Win', D: 'Draw', L: 'Loss' }
 
 const arsenalStyles = `
@@ -568,9 +568,9 @@ export default function ArsenalTracker({ onBack }) {
               <p style={{ color: A.textFaint, fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No games recorded yet.</p>
             ) : (
               <>
-                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 16px 0', marginBottom: '8px', borderBottom: '1px solid rgba(239,1,7,0.08)' }}>
-                  <span style={{ fontSize: '0.58em', letterSpacing: '5px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Logs</span>
-                  <span style={{ fontSize: '0.65em', color: A.redMuted, fontFamily: 'Montserrat', transition: 'transform 0.2s', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(239,1,7,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
+                  <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries</span>
+                  <span style={{ fontSize: '0.8em', color: A.redMuted, fontFamily: 'Montserrat', transition: 'transform 0.2s', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
                 </button>
                 {logsOpen && <div style={{ position: 'relative', paddingLeft: '28px' }}>
                 <div style={{ position: 'absolute', left: '7px', top: '8px', bottom: '8px', width: '1px', background: `linear-gradient(to bottom, ${A.red}, rgba(239,1,7,0.1))` }} />

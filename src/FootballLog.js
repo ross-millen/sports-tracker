@@ -534,9 +534,9 @@ export default function FootballLog({ onBack }) {
             <p style={{ color: 'rgba(80,20,20,0.3)', fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
           ) : (
             <>
-              <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 16px 0', marginBottom: '8px', borderBottom: '1px solid rgba(139,0,0,0.08)' }}>
-                <span style={{ fontSize: '0.58em', letterSpacing: '5px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Logs</span>
-                <span style={{ fontSize: '0.65em', color: 'rgba(139,0,0,0.5)', fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
+              <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(139,0,0,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(139,0,0,0.05)' }}>
+                <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: 'rgba(139,0,0,0.5)', textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries</span>
+                <span style={{ fontSize: '0.8em', color: 'rgba(139,0,0,0.5)', fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
               </button>
               {logsOpen && <div style={{ position: 'relative', paddingLeft: '28px' }}>
               <div style={{

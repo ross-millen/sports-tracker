@@ -240,56 +240,6 @@ function PushupDonutChart({ entries, colorMap }) {
   )
 }
 
-function PushupBarChart({ entries, colorMap }) {
-  const [tooltip, setTooltip] = useState(null)
-  if (entries.length === 0) return (
-    <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px' }}>Not enough data yet.</p>
-  )
-
-  const maxVal = Math.max(...entries.map(e => e.value))
-  const chartHeight = 160
-
-  return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', height: `${chartHeight + 40}px`, padding: '0 4px' }}>
-        {entries.map((entry, i) => {
-          const barH = Math.max(8, (entry.value / maxVal) * chartHeight)
-          return (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: '0.58em', color: '#1a1a1a', marginBottom: '6px', fontFamily: 'Montserrat', letterSpacing: '1px' }}>
-                {entry.value}
-              </div>
-              <div
-                className="pu-bar-segment"
-                style={{
-                  width: '100%', height: `${barH}px`,
-                  background: colorMap[entry.label],
-                  borderRadius: '3px 3px 0 0',
-                  animation: `puFadeUp 0.6s ease ${i * 0.1}s both`,
-                }}
-                onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, entry })}
-                onMouseLeave={() => setTooltip(null)}
-              />
-              <div style={{
-                fontSize: '0.55em', color: '#1a1a1a', marginTop: '8px',
-                fontFamily: 'Montserrat', letterSpacing: '1px', textTransform: 'uppercase',
-                textAlign: 'center', maxWidth: '100%', overflow: 'hidden',
-                textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 700,
-              }}>
-                {entry.label}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      {tooltip && (
-        <div className="pu-tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
-          {tooltip.entry.label} — {tooltip.entry.value} reps{tooltip.entry.target ? ` · ${tooltip.entry.target}` : ''}
-        </div>
-      )}
-    </div>
-  )
-}
 
 function FlameStreak({ value }) {
   const wrapStyle = (anim) => ({
@@ -442,9 +392,6 @@ export default function PushupTracker({ onBack }) {
   const colorMap = Object.fromEntries(allTargets.map((v, i) => [v.label, BAR_COLORS[i % BAR_COLORS.length]]))
 
   const repsByTarget = allTargets.map(v => ({ label: v.label, value: v.reps }))
-  const sessionsByTarget = Object.values(byTarget)
-    .sort((a, b) => b.sessions - a.sessions)
-    .map(v => ({ label: v.label, value: v.sessions }))
 
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: P.textMuted,
@@ -576,16 +523,6 @@ export default function PushupTracker({ onBack }) {
                   <PushupDonutChart entries={repsByTarget} colorMap={colorMap} />
                 </div>
 
-                <div style={{
-                  background: 'white', border: '1px solid rgba(30,58,138,0.08)',
-                  borderRadius: '4px', padding: '24px', marginBottom: '28px',
-                  boxShadow: '0 2px 12px rgba(30,58,138,0.05)',
-                }}>
-                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>
-                    Sessions by Target Area
-                  </div>
-                  <PushupBarChart entries={sessionsByTarget} colorMap={colorMap} />
-                </div>
               </>
             )}
 
@@ -594,9 +531,9 @@ export default function PushupTracker({ onBack }) {
               <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
             ) : (
               <>
-                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 16px 0', marginBottom: '8px', borderBottom: '1px solid rgba(30,58,138,0.08)' }}>
-                  <span style={{ fontSize: '0.58em', letterSpacing: '5px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Logs</span>
-                  <span style={{ fontSize: '0.65em', color: P.blueMuted, fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
+                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(30,58,138,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(30,58,138,0.05)' }}>
+                  <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries</span>
+                  <span style={{ fontSize: '0.8em', color: P.blueMuted, fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
                 </button>
                 {logsOpen && <div style={{ position: 'relative', paddingLeft: '28px' }}>
                 <div style={{
@@ -657,7 +594,7 @@ export default function PushupTracker({ onBack }) {
                               {session.count} reps
                             </div>
                             {session.target && (
-                              <span style={{ color: P.textMuted, fontSize: '0.62em', letterSpacing: '2px', textTransform: 'uppercase' }}>{session.target}</span>
+                              <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '2px', color: 'white', background: colorMap[(session.target).trim()] || P.blue, padding: '2px 8px', borderRadius: '2px' }}>{session.target}</span>
                             )}
                           </div>
                           <button className="pu-edit-btn" onClick={() => startEdit(session)}>Edit</button>
