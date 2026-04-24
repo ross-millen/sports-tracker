@@ -339,6 +339,7 @@ export default function PushupTracker({ onBack }) {
   const [saved, setSaved] = useState(false)
   const [sessions, setSessions] = useState([])
   const [editingId, setEditingId] = useState(null)
+  const [logsOpen, setLogsOpen] = useState(false)
   const [editDate, setEditDate] = useState('')
   const [editTarget, setEditTarget] = useState('')
   const [editCount, setEditCount] = useState('')
@@ -588,11 +589,16 @@ export default function PushupTracker({ onBack }) {
               </>
             )}
 
-            {/* Timeline */}
+            {/* Logs */}
             {sessions.length === 0 ? (
               <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
             ) : (
-              <div style={{ position: 'relative', paddingLeft: '28px' }}>
+              <>
+                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 16px 0', marginBottom: '8px', borderBottom: '1px solid rgba(30,58,138,0.08)' }}>
+                  <span style={{ fontSize: '0.58em', letterSpacing: '5px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Logs</span>
+                  <span style={{ fontSize: '0.65em', color: P.blueMuted, fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
+                </button>
+                {logsOpen && <div style={{ position: 'relative', paddingLeft: '28px' }}>
                 <div style={{
                   position: 'absolute', left: '7px', top: '8px', bottom: '8px',
                   width: '1px', background: 'linear-gradient(to bottom, #1e3a8a, rgba(30,58,138,0.1))',
@@ -660,7 +666,8 @@ export default function PushupTracker({ onBack }) {
                     )}
                   </div>
                 ))}
-              </div>
+              </div>}
+              </>
             )}
           </div>
         )}

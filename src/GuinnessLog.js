@@ -362,6 +362,7 @@ export default function GuinnessLog({ onBack }) {
   const [saved, setSaved] = useState(false)
   const [sessions, setSessions] = useState([])
   const [editingId, setEditingId] = useState(null)
+  const [logsOpen, setLogsOpen] = useState(false)
   const [editDate, setEditDate] = useState('')
   const [editCount, setEditCount] = useState('')
   const [editLocation, setEditLocation] = useState('')
@@ -587,7 +588,12 @@ export default function GuinnessLog({ onBack }) {
               {sessions.length === 0 ? (
                 <p style={{ color: 'rgba(245,236,215,0.2)', fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
               ) : (
-                <div style={{ position: 'relative', paddingLeft: '28px' }}>
+                <>
+                  <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 16px 0', marginBottom: '8px', borderBottom: `1px solid rgba(201,164,82,0.12)` }}>
+                    <span style={{ fontSize: '0.58em', letterSpacing: '5px', color: 'rgba(201,164,82,0.6)', textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Logs</span>
+                    <span style={{ fontSize: '0.65em', color: 'rgba(201,164,82,0.6)', fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
+                  </button>
+                  {logsOpen && <div style={{ position: 'relative', paddingLeft: '28px' }}>
                   <div style={{
                     position: 'absolute', left: '7px', top: '8px', bottom: '8px',
                     width: '1px', background: `linear-gradient(to bottom, ${G.gold}, rgba(201,164,82,0.1))`,
@@ -655,7 +661,8 @@ export default function GuinnessLog({ onBack }) {
                       )}
                     </div>
                   ))}
-                </div>
+                </div>}
+                </>
               )}
             </div>
           )}

@@ -328,6 +328,7 @@ export default function ArsenalTracker({ onBack }) {
   const [saved, setSaved] = useState(false)
   const [games, setGames] = useState([])
   const [editingId, setEditingId] = useState(null)
+  const [logsOpen, setLogsOpen] = useState(false)
   const [editDate, setEditDate] = useState('')
   const [editOpponent, setEditOpponent] = useState('')
   const [editCompetition, setEditCompetition] = useState('')
@@ -562,11 +563,16 @@ export default function ArsenalTracker({ onBack }) {
               </>
             )}
 
-            {/* Timeline */}
+            {/* Logs */}
             {games.length === 0 ? (
               <p style={{ color: A.textFaint, fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No games recorded yet.</p>
             ) : (
-              <div style={{ position: 'relative', paddingLeft: '28px' }}>
+              <>
+                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 16px 0', marginBottom: '8px', borderBottom: '1px solid rgba(239,1,7,0.08)' }}>
+                  <span style={{ fontSize: '0.58em', letterSpacing: '5px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Logs</span>
+                  <span style={{ fontSize: '0.65em', color: A.redMuted, fontFamily: 'Montserrat', transition: 'transform 0.2s', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
+                </button>
+                {logsOpen && <div style={{ position: 'relative', paddingLeft: '28px' }}>
                 <div style={{ position: 'absolute', left: '7px', top: '8px', bottom: '8px', width: '1px', background: `linear-gradient(to bottom, ${A.red}, rgba(239,1,7,0.1))` }} />
                 {games.map((game, i) => (
                   <div key={game.id} style={{ position: 'relative', marginBottom: '20px', animation: `arFadeUp 0.4s ease ${i * 0.06}s both` }}>
@@ -655,7 +661,8 @@ export default function ArsenalTracker({ onBack }) {
                     )}
                   </div>
                 ))}
-              </div>
+              </div>}
+              </>
             )}
           </div>
         )}
