@@ -108,6 +108,7 @@ export default function TakeawayLog({ onBack }) {
   const [date, setDate] = useState('')
   const [restaurant, setRestaurant] = useState('')
   const [price, setPrice] = useState('')
+  const [isBreakfast, setIsBreakfast] = useState(false)
   const [saved, setSaved] = useState(false)
   const [orders, setOrders] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -130,13 +131,13 @@ export default function TakeawayLog({ onBack }) {
     if (!date || !restaurant || !price) { alert('Please fill in all fields'); return }
     const { error } = await supabase
       .from('takeaways')
-      .insert([{ date, restaurant, price: parseFloat(price) }])
+      .insert([{ date, restaurant, price: parseFloat(price), is_breakfast: isMcDonalds ? isBreakfast : false }])
     if (error) {
       alert('Error saving: ' + error.message)
     } else {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-      setDate(''); setRestaurant(''); setPrice('')
+      setDate(''); setRestaurant(''); setPrice(''); setIsBreakfast(false)
       fetchOrders()
     }
   }
@@ -182,6 +183,8 @@ export default function TakeawayLog({ onBack }) {
   })
   const topRestaurant = Object.entries(restaurantCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—'
 
+  const isMcDonalds = /mc\s*donald/i.test(restaurant)
+
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: T.textMuted,
     textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500,
@@ -207,7 +210,7 @@ export default function TakeawayLog({ onBack }) {
         {/* Title */}
         <div className="ta-fade-up" style={{ textAlign: 'center', marginBottom: '40px' }}>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.8em, 6vw, 2.8em)', fontWeight: 300, color: T.orange, letterSpacing: '6px', textTransform: 'uppercase', lineHeight: 1 }}>
-            Takeaways
+            Takeaway
           </h2>
           <div style={{ width: '40px', height: '1px', background: `linear-gradient(90deg, transparent, ${T.orange}, transparent)`, margin: '14px auto' }} />
         </div>
@@ -231,8 +234,22 @@ export default function TakeawayLog({ onBack }) {
 
             <div style={{ marginBottom: '24px' }}>
               <div style={labelStyle}>Restaurant</div>
-              <input className="ta-input" type="text" placeholder="e.g. Dishoom..." value={restaurant} onChange={e => setRestaurant(e.target.value)} />
+              <input className="ta-input" type="text" placeholder="e.g. Dishoom..." value={restaurant} onChange={e => { setRestaurant(e.target.value); setIsBreakfast(false) }} />
             </div>
+
+            {isMcDonalds && (
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={isBreakfast}
+                    onChange={e => setIsBreakfast(e.target.checked)}
+                    style={{ accentColor: T.orange, width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: '0.72em', letterSpacing: '1px', color: isBreakfast ? T.orange : T.textMuted, fontFamily: 'Montserrat', fontWeight: 500, transition: 'color 0.2s' }}>Breakfast</span>
+                </label>
+              </div>
+            )}
 
             <div style={{ marginBottom: '36px' }}>
               <div style={labelStyle}>Price (£)</div>
@@ -318,8 +335,13 @@ export default function TakeawayLog({ onBack }) {
                               {formatUKDate(order.date)}
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: T.text, fontWeight: 600, lineHeight: 1.1 }}>
-                                {order.restaurant}
+                              <div>
+                                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: T.text, fontWeight: 600, lineHeight: 1.1 }}>
+                                  {order.restaurant}
+                                </div>
+                                {order.is_breakfast && (
+                                  <span style={{ marginTop: '6px', display: 'inline-block', fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '2px', color: 'white', background: T.orange, padding: '2px 8px', borderRadius: '2px' }}>Breakfast</span>
+                                )}
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1em', color: T.orange, fontWeight: 600 }}>£{parseFloat(order.price).toFixed(2)}</span>
