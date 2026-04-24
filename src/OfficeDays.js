@@ -193,7 +193,6 @@ function OfficeHeatmap({ sessions }) {
 
         {/* Week rows */}
         {weeks.map((week, wi) => {
-          const weekdaysInMonth = week.slice(0, 5).filter(d => d.getMonth() === month)
           return (
             <div key={wi} style={{ marginBottom: '3px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '3px' }}>
