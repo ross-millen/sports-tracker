@@ -4,6 +4,7 @@ import GuinnessLog from './GuinnessLog'
 import OfficeDays from './OfficeDays'
 import ArsenalTracker from './ArsenalTracker'
 import FootballLog from './FootballLog'
+import TakeawayLog from './TakeawayLog'
 
 const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
@@ -196,6 +197,7 @@ function App() {
               { label: 'Guinness', key: 'guinness' },
               { label: 'Pushups', key: 'pushups' },
               { label: 'Office', key: 'office' },
+              { label: 'Takeaways', key: 'takeaways' },
             ].map(item => (
               <button
                 key={item.key}
@@ -234,7 +236,8 @@ function App() {
           {tracker === 'guinness' && <GuinnessLog    onBack={closeTracker} />}
           {tracker === 'pushups'  && <PushupTracker  onBack={closeTracker} />}
           {tracker === 'office'   && <OfficeDays     onBack={closeTracker} />}
-          {tracker === 'football' && <FootballLog    onBack={closeTracker} />}
+          {tracker === 'football'   && <FootballLog    onBack={closeTracker} />}
+          {tracker === 'takeaways' && <TakeawayLog    onBack={closeTracker} />}
         </div>
       )}
     </>
