@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 
 const T = {
-  orange: '#c2410c',
-  orangeDark: '#9a3412',
-  orangeMuted: 'rgba(194,65,12,0.4)',
-  orangeFaint: 'rgba(194,65,12,0.07)',
+  orange: '#92400e',
+  orangeDark: '#78350f',
+  orangeMuted: 'rgba(146,64,14,0.4)',
+  orangeFaint: 'rgba(146,64,14,0.07)',
   surface: '#ffffff',
   text: '#1c0a00',
   textMuted: 'rgba(28,10,0,0.45)',
@@ -27,81 +27,82 @@ const takeawayStyles = `
 
   .ta-nav-btn {
     flex: 1; padding: 14px; background: transparent;
-    color: rgba(28,10,0,0.3); border: none; cursor: pointer;
+    color: rgba(26,10,0,0.3); border: none; cursor: pointer;
     font-family: 'Montserrat', sans-serif; font-weight: 500;
     letter-spacing: 3px; text-transform: uppercase; font-size: 0.68em;
     transition: all 0.3s ease; position: relative;
   }
-  .ta-nav-btn:hover { color: #c2410c; }
-  .ta-nav-btn.active { color: #c2410c; background: rgba(194,65,12,0.04); }
+  .ta-nav-btn:hover { color: #92400e; }
+  .ta-nav-btn.active { color: #92400e; background: rgba(146,64,14,0.04); }
   .ta-nav-btn.active::after {
     content: ''; position: absolute; bottom: 0; left: 20%; right: 20%;
-    height: 2px; background: #c2410c;
+    height: 2px; background: #92400e;
   }
 
   .ta-input {
     width: 100%; padding: 12px 0; background: transparent;
-    border: none; border-bottom: 1px solid rgba(194,65,12,0.2);
-    color: #1c0a00; font-family: 'Montserrat', sans-serif;
+    border: none; border-bottom: 1px solid rgba(146,64,14,0.2);
+    color: #1a0a00; font-family: 'Montserrat', sans-serif;
     font-size: 0.9em; font-weight: 400; transition: border-color 0.3s ease; outline: none;
   }
-  .ta-input:focus { border-bottom-color: #c2410c; }
-  .ta-input::placeholder { color: rgba(28,10,0,0.2); font-weight: 300; }
+  .ta-input:focus { border-bottom-color: #92400e; }
+  .ta-input::placeholder { color: rgba(26,10,0,0.2); font-weight: 300; }
 
   .ta-inline-input {
     background: transparent; border: none;
-    border-bottom: 1px solid rgba(194,65,12,0.25); color: #1c0a00;
+    border-bottom: 1px solid rgba(146,64,14,0.25); color: #1a0a00;
     font-family: 'Montserrat', sans-serif; font-size: 0.85em;
     outline: none; padding: 2px 4px; width: 100%; margin-top: 4px;
   }
-  .ta-inline-input:focus { border-bottom-color: #c2410c; }
+  .ta-inline-input:focus { border-bottom-color: #92400e; }
 
   .ta-save-btn {
-    width: 100%; padding: 15px; background: #c2410c; color: white;
+    width: 100%; padding: 15px; background: #92400e; color: white;
     border: none; border-radius: 2px; cursor: pointer;
     font-family: 'Montserrat', sans-serif; font-weight: 600;
     font-size: 0.7em; letter-spacing: 4px; text-transform: uppercase;
     margin-top: 10px; transition: all 0.3s ease;
   }
   .ta-save-btn:hover {
-    background: #9a3412; letter-spacing: 5px;
-    box-shadow: 0 4px 20px rgba(194,65,12,0.25);
+    background: #78350f; letter-spacing: 5px;
+    box-shadow: 0 4px 20px rgba(146,64,14,0.25);
   }
 
   .ta-edit-btn {
-    background: none; border: 1px solid rgba(194,65,12,0.25);
-    color: #c2410c; padding: 5px 12px; border-radius: 2px;
+    background: none; border: 1px solid rgba(146,64,14,0.25);
+    color: #92400e; padding: 5px 12px; border-radius: 2px;
     cursor: pointer; font-family: 'Montserrat', sans-serif;
     font-size: 0.6em; letter-spacing: 2px; text-transform: uppercase;
     transition: all 0.2s ease;
   }
-  .ta-edit-btn:hover { background: #c2410c; color: white; }
+  .ta-edit-btn:hover { background: #92400e; color: white; }
 
   .ta-cancel-btn {
-    background: none; border: 1px solid rgba(28,10,0,0.15);
-    color: rgba(28,10,0,0.4); padding: 5px 12px; border-radius: 2px;
+    background: none; border: 1px solid rgba(26,10,0,0.15);
+    color: rgba(26,10,0,0.4); padding: 5px 12px; border-radius: 2px;
     cursor: pointer; font-family: 'Montserrat', sans-serif;
     font-size: 0.6em; letter-spacing: 2px; text-transform: uppercase;
     transition: all 0.2s ease; margin-right: 8px;
   }
-  .ta-cancel-btn:hover { background: rgba(28,10,0,0.04); }
+  .ta-cancel-btn:hover { background: rgba(26,10,0,0.04); }
 
   .ta-delete-btn {
-    background: none; border: 1px solid rgba(194,65,12,0.2);
-    color: rgba(194,65,12,0.45); padding: 5px 12px; border-radius: 2px;
+    background: none; border: 1px solid rgba(146,64,14,0.2);
+    color: rgba(146,64,14,0.45); padding: 5px 12px; border-radius: 2px;
     cursor: pointer; font-family: 'Montserrat', sans-serif;
     font-size: 0.6em; letter-spacing: 2px; text-transform: uppercase;
     transition: all 0.2s ease;
   }
-  .ta-delete-btn:hover { background: #c2410c; color: white; border-color: #c2410c; }
+  .ta-delete-btn:hover { background: #92400e; color: white; border-color: #92400e; }
 
   .ta-kpi-shimmer {
-    background: linear-gradient(90deg, #c2410c, #f97316, #c2410c);
+    background: linear-gradient(90deg, #92400e, #d97706, #92400e);
     background-size: 200% auto;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     animation: taShimmer 3s linear infinite;
   }
 `
+
 
 export default function TakeawayLog({ onBack }) {
   const [page, setPage] = useState('log')
@@ -109,13 +110,17 @@ export default function TakeawayLog({ onBack }) {
   const [restaurant, setRestaurant] = useState('')
   const [price, setPrice] = useState('')
   const [isBreakfast, setIsBreakfast] = useState(false)
+  const [deliveryApp, setDeliveryApp] = useState('')
   const [saved, setSaved] = useState(false)
   const [orders, setOrders] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [editDate, setEditDate] = useState('')
   const [editRestaurant, setEditRestaurant] = useState('')
   const [editPrice, setEditPrice] = useState('')
+  const [editDeliveryApp, setEditDeliveryApp] = useState('')
   const [logsOpen, setLogsOpen] = useState(false)
+
+  const DELIVERY_APPS = ['Deliveroo', 'Uber Eats', 'Just Eat', 'Collection']
 
   const fetchOrders = async () => {
     const { data, error } = await supabase
@@ -131,13 +136,13 @@ export default function TakeawayLog({ onBack }) {
     if (!date || !restaurant || !price) { alert('Please fill in all fields'); return }
     const { error } = await supabase
       .from('takeaways')
-      .insert([{ date, restaurant, price: parseFloat(price), is_breakfast: isMcDonalds ? isBreakfast : false }])
+      .insert([{ date, restaurant: normaliseRestaurant(restaurant), price: parseFloat(price), is_breakfast: isMcDonalds ? isBreakfast : false, delivery_app: deliveryApp || null }])
     if (error) {
       alert('Error saving: ' + error.message)
     } else {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-      setDate(''); setRestaurant(''); setPrice(''); setIsBreakfast(false)
+      setDate(''); setRestaurant(''); setPrice(''); setIsBreakfast(false); setDeliveryApp('')
       fetchOrders()
     }
   }
@@ -147,10 +152,11 @@ export default function TakeawayLog({ onBack }) {
     setEditDate(o.date || '')
     setEditRestaurant(o.restaurant || '')
     setEditPrice(o.price != null ? String(o.price) : '')
+    setEditDeliveryApp(o.delivery_app || '')
   }
 
   const cancelEdit = () => {
-    setEditingId(null); setEditDate(''); setEditRestaurant(''); setEditPrice('')
+    setEditingId(null); setEditDate(''); setEditRestaurant(''); setEditPrice(''); setEditDeliveryApp('')
   }
 
   const deleteOrder = async (id) => {
@@ -162,7 +168,7 @@ export default function TakeawayLog({ onBack }) {
   const saveEdit = async (id) => {
     const { error } = await supabase
       .from('takeaways')
-      .update({ date: editDate, restaurant: editRestaurant, price: parseFloat(editPrice) })
+      .update({ date: editDate, restaurant: normaliseRestaurant(editRestaurant), price: parseFloat(editPrice), delivery_app: editDeliveryApp || null })
       .eq('id', id)
     if (error) { alert('Error updating: ' + error.message) } else { setEditingId(null); fetchOrders() }
   }
@@ -181,9 +187,18 @@ export default function TakeawayLog({ onBack }) {
   orders.forEach(o => {
     if (o.restaurant) restaurantCounts[o.restaurant] = (restaurantCounts[o.restaurant] || 0) + 1
   })
-  const topRestaurant = Object.entries(restaurantCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—'
+  const rankedRestaurants = Object.entries(restaurantCounts).sort((a, b) => b[1] - a[1])
+  const highestOrder = orders.length ? Math.max(...orders.map(o => parseFloat(o.price) || 0)) : 0
+  const podium = [rankedRestaurants[1], rankedRestaurants[0], rankedRestaurants[2]]
+  const podiumHeights = [70, 100, 50]
+  const podiumLabels = ['2nd', '1st', '3rd']
+  const podiumColors = ['#A8A9AD', '#D4AF37', '#CD7F32']
+
 
   const isMcDonalds = /mc\s*donald/i.test(restaurant)
+
+  const normaliseRestaurant = (name) =>
+    /mc\s*donald/i.test(name) ? "Mc Donald's" : name
 
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: T.textMuted,
@@ -216,15 +231,15 @@ export default function TakeawayLog({ onBack }) {
         </div>
 
         {/* Nav */}
-        <div className="ta-fade-up-delay" style={{ display: 'flex', border: '1px solid rgba(194,65,12,0.15)', borderRadius: '2px', marginBottom: '40px', overflow: 'hidden', background: 'white', boxShadow: '0 2px 12px rgba(194,65,12,0.06)' }}>
+        <div className="ta-fade-up-delay" style={{ display: 'flex', border: '1px solid rgba(146,64,14,0.15)', borderRadius: '2px', marginBottom: '40px', overflow: 'hidden', background: 'white', boxShadow: '0 2px 12px rgba(146,64,14,0.06)' }}>
           <button className={`ta-nav-btn ${page === 'log' ? 'active' : ''}`} onClick={() => setPage('log')}>Log Order</button>
-          <div style={{ width: '1px', background: 'rgba(194,65,12,0.1)' }} />
+          <div style={{ width: '1px', background: 'rgba(146,64,14,0.1)' }} />
           <button className={`ta-nav-btn ${page === 'history' ? 'active' : ''}`} onClick={() => setPage('history')}>History</button>
         </div>
 
         {/* Log Page */}
         {page === 'log' && (
-          <div className="ta-fade-up-delay-2" style={{ background: 'white', borderRadius: '4px', padding: '32px', boxShadow: '0 2px 20px rgba(194,65,12,0.06)', border: '1px solid rgba(194,65,12,0.08)' }}>
+          <div className="ta-fade-up-delay-2" style={{ background: 'white', borderRadius: '4px', padding: '32px', boxShadow: '0 2px 20px rgba(146,64,14,0.06)', border: '1px solid rgba(146,64,14,0.08)' }}>
             <div style={{ fontSize: '0.58em', letterSpacing: '5px', color: T.orangeMuted, textTransform: 'uppercase', marginBottom: '28px', fontWeight: 600 }}>New Order</div>
 
             <div style={{ marginBottom: '24px' }}>
@@ -235,6 +250,14 @@ export default function TakeawayLog({ onBack }) {
             <div style={{ marginBottom: '24px' }}>
               <div style={labelStyle}>Restaurant</div>
               <input className="ta-input" type="text" placeholder="e.g. Dishoom..." value={restaurant} onChange={e => { setRestaurant(e.target.value); setIsBreakfast(false) }} />
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <div style={labelStyle}>Delivery App</div>
+              <select className="ta-input" value={deliveryApp} onChange={e => setDeliveryApp(e.target.value)} style={{ cursor: 'pointer' }}>
+                <option value="">— select app —</option>
+                {DELIVERY_APPS.map(app => <option key={app} value={app}>{app}</option>)}
+              </select>
             </div>
 
             {isMcDonalds && (
@@ -259,7 +282,7 @@ export default function TakeawayLog({ onBack }) {
             <button className="ta-save-btn" onClick={handleSubmit}>Record Order</button>
 
             {saved && (
-              <div style={{ marginTop: '16px', padding: '12px', border: '1px solid rgba(194,65,12,0.15)', borderRadius: '2px', textAlign: 'center', color: T.orange, fontSize: '0.65em', letterSpacing: '3px', textTransform: 'uppercase', animation: 'taFadeUp 0.4s ease', background: T.orangeFaint }}>
+              <div style={{ marginTop: '16px', padding: '12px', border: '1px solid rgba(146,64,14,0.15)', borderRadius: '2px', textAlign: 'center', color: T.orange, fontSize: '0.65em', letterSpacing: '3px', textTransform: 'uppercase', animation: 'taFadeUp 0.4s ease', background: T.orangeFaint }}>
                 ✦ Order Recorded
               </div>
             )}
@@ -281,30 +304,63 @@ export default function TakeawayLog({ onBack }) {
                     { label: 'Total Orders', value: totalOrders },
                     { label: 'Total Spend', value: `£${totalSpend.toFixed(2)}` },
                     { label: 'Avg Order', value: `£${avgOrder.toFixed(2)}` },
-                    { label: 'Top Restaurant', value: topRestaurant },
+                    { label: 'Highest Order', value: `£${highestOrder.toFixed(2)}` },
                   ].map(kpi => (
-                    <div key={kpi.label} style={{ padding: '16px 12px', background: 'white', border: '1px solid rgba(194,65,12,0.1)', borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(194,65,12,0.05)' }}>
+                    <div key={kpi.label} style={{ padding: '16px 12px', background: 'white', border: '1px solid rgba(146,64,14,0.1)', borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(146,64,14,0.05)' }}>
                       <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: T.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
-                      <div className="ta-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600 }}>{kpi.value}</div>
+                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600, color: T.orange }}>{kpi.value}</div>
                     </div>
                   ))}
                 </div>
 
+{/* Podium */}
+                {rankedRestaurants.length >= 2 && (
+                  <div style={{ background: 'white', border: '1px solid rgba(146,64,14,0.1)', borderRadius: '4px', padding: '20px 20px 0', marginBottom: '28px', boxShadow: '0 2px 12px rgba(146,64,14,0.05)' }}>
+                    <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: T.orangeMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '24px' }}>Top Restaurants</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px' }}>
+                      {podium.map((entry, i) => {
+                        if (!entry) return <div key={i} style={{ flex: 1 }} />
+                        const [name, count] = entry
+                        return (
+                          <div key={name} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <div style={{ fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 600, color: T.text, textAlign: 'center', marginBottom: '6px', lineHeight: 1.3, letterSpacing: '0.5px' }}>
+                              {name}
+                            </div>
+                            <div style={{ fontSize: '0.5em', fontFamily: 'Montserrat', fontWeight: 500, color: T.orangeMuted, marginBottom: '8px', letterSpacing: '1px' }}>
+                              {count} order{count !== 1 ? 's' : ''}
+                            </div>
+                            <div style={{
+                              width: '100%', height: `${podiumHeights[i]}px`,
+                              background: podiumColors[i],
+                              borderRadius: '3px 3px 0 0',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            }}>
+                              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: `${podiumHeights[i] * 0.28}px`, fontWeight: 700, color: 'white', letterSpacing: '1px' }}>
+                                {podiumLabels[i]}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Entries */}
-                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(194,65,12,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(194,65,12,0.05)' }}>
+                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(146,64,14,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(146,64,14,0.05)' }}>
                   <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: T.orangeMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries</span>
                   <span style={{ fontSize: '0.8em', color: T.orangeMuted, fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
                 </button>
 
                 {logsOpen && (
                   <div style={{ position: 'relative', paddingLeft: '28px' }}>
-                    <div style={{ position: 'absolute', left: '7px', top: '8px', bottom: '8px', width: '1px', background: `linear-gradient(to bottom, ${T.orange}, rgba(194,65,12,0.1))` }} />
+                    <div style={{ position: 'absolute', left: '7px', top: '8px', bottom: '8px', width: '1px', background: `linear-gradient(to bottom, ${T.orange}, rgba(146,64,14,0.1))` }} />
                     {orders.map((order, i) => (
                       <div key={order.id} style={{ position: 'relative', marginBottom: '20px', animation: `taFadeUp 0.4s ease ${i * 0.06}s both` }}>
-                        <div style={{ position: 'absolute', left: '-24px', top: '28px', width: '9px', height: '9px', borderRadius: '50%', background: editingId === order.id ? T.orange : 'white', border: `2px solid ${T.orange}`, boxShadow: '0 0 0 3px rgba(194,65,12,0.08)' }} />
+                        <div style={{ position: 'absolute', left: '-24px', top: '28px', width: '9px', height: '9px', borderRadius: '50%', background: editingId === order.id ? T.orange : 'white', border: `2px solid ${T.orange}`, boxShadow: '0 0 0 3px rgba(146,64,14,0.08)' }} />
 
                         {editingId === order.id ? (
-                          <div style={{ background: 'white', borderRadius: '4px', padding: '20px', border: '1px solid rgba(194,65,12,0.15)', boxShadow: '0 2px 16px rgba(194,65,12,0.08)' }}>
+                          <div style={{ background: 'white', borderRadius: '4px', padding: '20px', border: '1px solid rgba(146,64,14,0.15)', boxShadow: '0 2px 16px rgba(146,64,14,0.08)' }}>
                             <div style={{ fontSize: '0.58em', letterSpacing: '2px', color: T.orangeMuted, textTransform: 'uppercase', marginBottom: '12px', fontWeight: 500 }}>Editing</div>
                             <div style={{ marginBottom: '12px' }}>
                               <div style={editLabelStyle}>Date</div>
@@ -314,9 +370,16 @@ export default function TakeawayLog({ onBack }) {
                               <div style={editLabelStyle}>Restaurant</div>
                               <input className="ta-inline-input" type="text" value={editRestaurant} onChange={e => setEditRestaurant(e.target.value)} />
                             </div>
-                            <div style={{ marginBottom: '16px' }}>
+                            <div style={{ marginBottom: '12px' }}>
                               <div style={editLabelStyle}>Price (£)</div>
                               <input className="ta-inline-input" type="number" step="0.01" value={editPrice} onChange={e => setEditPrice(e.target.value)} />
+                            </div>
+                            <div style={{ marginBottom: '16px' }}>
+                              <div style={editLabelStyle}>Delivery App</div>
+                              <select className="ta-inline-input" value={editDeliveryApp} onChange={e => setEditDeliveryApp(e.target.value)} style={{ cursor: 'pointer' }}>
+                                <option value="">— none —</option>
+                                {DELIVERY_APPS.map(app => <option key={app} value={app}>{app}</option>)}
+                              </select>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <button className="ta-delete-btn" onClick={() => deleteOrder(order.id)}>Delete</button>
@@ -327,9 +390,9 @@ export default function TakeawayLog({ onBack }) {
                             </div>
                           </div>
                         ) : (
-                          <div style={{ background: 'white', borderRadius: '4px', padding: '16px 20px', border: '1px solid rgba(194,65,12,0.07)', boxShadow: '0 1px 8px rgba(194,65,12,0.05)', transition: 'box-shadow 0.2s ease, border-color 0.2s ease' }}
-                            onMouseOver={e => { e.currentTarget.style.boxShadow = '0 2px 16px rgba(194,65,12,0.1)'; e.currentTarget.style.borderColor = 'rgba(194,65,12,0.2)' }}
-                            onMouseOut={e => { e.currentTarget.style.boxShadow = '0 1px 8px rgba(194,65,12,0.05)'; e.currentTarget.style.borderColor = 'rgba(194,65,12,0.07)' }}
+                          <div style={{ background: 'white', borderRadius: '4px', padding: '16px 20px', border: '1px solid rgba(146,64,14,0.07)', boxShadow: '0 1px 8px rgba(146,64,14,0.05)', transition: 'box-shadow 0.2s ease, border-color 0.2s ease' }}
+                            onMouseOver={e => { e.currentTarget.style.boxShadow = '0 2px 16px rgba(146,64,14,0.1)'; e.currentTarget.style.borderColor = 'rgba(146,64,14,0.2)' }}
+                            onMouseOut={e => { e.currentTarget.style.boxShadow = '0 1px 8px rgba(146,64,14,0.05)'; e.currentTarget.style.borderColor = 'rgba(146,64,14,0.07)' }}
                           >
                             <div style={{ fontSize: '0.52em', letterSpacing: '2px', color: T.orangeMuted, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 600 }}>
                               {formatUKDate(order.date)}
@@ -339,9 +402,14 @@ export default function TakeawayLog({ onBack }) {
                                 <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3em', color: T.text, fontWeight: 600, lineHeight: 1.1 }}>
                                   {order.restaurant}
                                 </div>
-                                {order.is_breakfast && (
-                                  <span style={{ marginTop: '6px', display: 'inline-block', fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '2px', color: 'white', background: T.orange, padding: '2px 8px', borderRadius: '2px' }}>Breakfast</span>
-                                )}
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                                  {order.is_breakfast && (
+                                    <span style={{ display: 'inline-block', fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '2px', color: 'white', background: T.orange, padding: '2px 8px', borderRadius: '2px' }}>Breakfast</span>
+                                  )}
+                                  {order.delivery_app && (
+                                    <span style={{ display: 'inline-block', fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '2px', color: T.orange, background: T.orangeFaint, border: `1px solid rgba(146,64,14,0.2)`, padding: '2px 8px', borderRadius: '2px' }}>{order.delivery_app}</span>
+                                  )}
+                                </div>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1em', color: T.orange, fontWeight: 600 }}>£{parseFloat(order.price).toFixed(2)}</span>

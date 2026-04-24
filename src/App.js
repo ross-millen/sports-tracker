@@ -197,7 +197,7 @@ function App() {
               { label: 'Guinness', key: 'guinness' },
               { label: 'Pushups', key: 'pushups' },
               { label: 'Office', key: 'office' },
-              { label: 'Takeaways', key: 'takeaways' },
+              { label: 'Takeaway', key: 'takeaways' },
             ].map(item => (
               <button
                 key={item.key}
