@@ -21,7 +21,7 @@ const CARABAO_STAGES = ['Round 1', 'Round 2', 'Round 3', 'Round 4', 'Quarter Fin
 const VENUES = ['Home', 'Away', 'Neutral']
 const RESULTS = ['W', 'D', 'L']
 
-const resultColor = { W: '#1a5c38', D: '#d97706', L: '#EF0107' }
+const resultColor = { W: '#6aab7a', D: '#d4a86a', L: '#c4756b' }
 const resultLabel = { W: 'Win', D: 'Draw', L: 'Loss' }
 
 const arsenalStyles = `
@@ -153,7 +153,7 @@ function ResultDonut({ games }) {
   if (entries.length === 0) return null
 
   const total = entries.reduce((s, e) => s + e.value, 0)
-  const R = 70, cx = 95, cy = 85, stroke = 26
+  const R = 80, cx = 110, cy = 95, stroke = 28
   let cumAngle = -Math.PI / 2
 
   const slices = entries.map(e => {
@@ -167,43 +167,49 @@ function ResultDonut({ games }) {
   return (
     <div style={{ position: 'relative' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-        <svg viewBox="0 0 190 170" style={{ width: '160px', flexShrink: 0 }}>
+        <svg viewBox="0 0 220 190" style={{ width: '180px', flexShrink: 0 }}>
           {slices.map((s, i) => {
-            const x1 = cx + R * Math.cos(s.startAngle), y1 = cy + R * Math.sin(s.startAngle)
-            const x2 = cx + R * Math.cos(s.endAngle), y2 = cy + R * Math.sin(s.endAngle)
+            const startAngle = i === 0 ? -Math.PI / 2 : slices.slice(0, i).reduce((a, sl) => a + sl.frac * 2 * Math.PI, -Math.PI / 2)
+            const endAngle = startAngle + s.frac * 2 * Math.PI
+            const x1 = cx + R * Math.cos(startAngle), y1 = cy + R * Math.sin(startAngle)
+            const x2 = cx + R * Math.cos(endAngle), y2 = cy + R * Math.sin(endAngle)
             return (
               <path key={i}
                 d={`M ${x1} ${y1} A ${R} ${R} 0 ${s.frac > 0.5 ? 1 : 0} 1 ${x2} ${y2}`}
                 fill="none" stroke={s.color} strokeWidth={stroke} strokeLinecap="butt"
-                style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
-                onMouseOver={e => e.target.style.opacity = '0.8'}
-                onMouseOut={e => e.target.style.opacity = '1'}
+                style={{ cursor: 'pointer', transition: 'opacity 0.2s ease' }}
+                onMouseOver={e => { e.target.style.opacity = '0.8' }}
+                onMouseOut={e => { e.target.style.opacity = '1' }}
                 onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, s })}
                 onMouseLeave={() => setTooltip(null)}
               />
             )
           })}
           {slices.map((s, i) => {
+            const boundaryAngle = i === 0 ? -Math.PI / 2 : slices.slice(0, i).reduce((a, sl) => a + sl.frac * 2 * Math.PI, -Math.PI / 2)
             const inner = R - stroke / 2, outer = R + stroke / 2
-            return <line key={i}
-              x1={cx + inner * Math.cos(s.startAngle)} y1={cy + inner * Math.sin(s.startAngle)}
-              x2={cx + outer * Math.cos(s.startAngle)} y2={cy + outer * Math.sin(s.startAngle)}
-              stroke="white" strokeWidth="1.5" />
+            return (
+              <line key={i}
+                x1={cx + inner * Math.cos(boundaryAngle)} y1={cy + inner * Math.sin(boundaryAngle)}
+                x2={cx + outer * Math.cos(boundaryAngle)} y2={cy + outer * Math.sin(boundaryAngle)}
+                stroke="black" strokeWidth="1.5"
+              />
+            )
           })}
-          <circle cx={cx} cy={cy} r={R - stroke / 2} fill="none" stroke="white" strokeWidth="1.5" />
-          <circle cx={cx} cy={cy} r={R + stroke / 2} fill="none" stroke="white" strokeWidth="1.5" />
-          <text x={cx} y={cy - 6} textAnchor="middle" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '20px', fill: A.text, fontWeight: 600 }}>{total}</text>
-          <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontFamily: 'Montserrat', fontSize: '6px', fill: A.textMuted, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700 }}>GAMES</text>
+          <circle cx={cx} cy={cy} r={R - stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
+          <circle cx={cx} cy={cy} r={R + stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
+          <text x={cx} y={cy - 8} textAnchor="middle" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', fill: '#2a0a0a', fontWeight: 600 }}>{total}</text>
+          <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontFamily: 'Montserrat', fontSize: '7px', fill: '#1a1a1a', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700 }}>GAMES</text>
         </svg>
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: '100px' }}>
           {slices.map((s, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: s.color, flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: '0.7em', color: A.text, fontFamily: "'Cormorant Garamond',serif", fontWeight: 600 }}>{s.label}</div>
-                <div style={{ fontSize: '0.5em', color: A.textMuted, letterSpacing: '1px', fontFamily: 'Montserrat' }}>{s.value} game{s.value !== 1 ? 's' : ''}</div>
+                <div style={{ fontSize: '0.7em', color: '#2a0a0a', fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>{s.label}</div>
+                <div style={{ fontSize: '0.5em', color: 'rgba(80,20,20,0.4)', letterSpacing: '1px', fontFamily: 'Montserrat' }}>{s.value} game{s.value !== 1 ? 's' : ''}</div>
               </div>
-              <div style={{ fontSize: '0.6em', color: A.textMuted, fontFamily: 'Montserrat', fontWeight: 600 }}>{Math.round(s.frac * 100)}%</div>
+              <div style={{ fontSize: '0.6em', color: 'rgba(80,20,20,0.4)', fontFamily: 'Montserrat', fontWeight: 600 }}>{Math.round(s.frac * 100)}%</div>
             </div>
           ))}
         </div>

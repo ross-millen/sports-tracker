@@ -112,17 +112,22 @@ const officeStyles = `
 `
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const DAY_LABELS = ['M','T','W','T','F','S','S']
+const DAY_LABELS = ['M','T','W','T','F']
 
 function OfficeHeatmap({ sessions }) {
-  const officeDates = new Set(sessions.map(s => s.date))
+  const officeDates = new Set(sessions.filter(s => !s.wfh_approved && !s.annual_leave).map(s => s.date))
+  const wfhDates = new Set(sessions.filter(s => s.wfh_approved).map(s => s.date))
+  const annualDates = new Set(sessions.filter(s => s.annual_leave).map(s => s.date))
   const now = new Date()
   const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
   const START_MONTH = 3 // April (0-indexed)
+  const latestDataMonth = sessions.length > 0
+    ? Math.max(...sessions.map(s => parseInt(s.date.split('-')[1]) - 1))
+    : now.getMonth()
   const months = []
-  for (let m = START_MONTH; m <= now.getMonth(); m++) months.push(m)
+  for (let m = START_MONTH; m <= Math.max(now.getMonth(), latestDataMonth); m++) months.push(m)
 
-  const [idx, setIdx] = useState(months.length - 1)
+  const [idx, setIdx] = useState(months.indexOf(now.getMonth()))
   const [dir, setDir] = useState(null) // 'left' | 'right'
   const [animKey, setAnimKey] = useState(0)
 
@@ -178,11 +183,10 @@ function OfficeHeatmap({ sessions }) {
       {/* Calendar */}
       <div key={animKey} style={{ animation: `${slideIn} 0.25s ease forwards` }}>
         {/* Day headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: '6px 1fr', gap: '6px', marginBottom: '4px', alignItems: 'center' }}>
-          <div />
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
+        <div style={{ marginBottom: '4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '3px' }}>
             {DAY_LABELS.map((d, i) => (
-              <div key={i} style={{ textAlign: 'center', fontSize: '0.42em', color: i >= 5 ? O.textFaint : O.textMuted, fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '1px' }}>{d}</div>
+              <div key={i} style={{ textAlign: 'center', fontSize: '0.42em', color: O.textMuted, fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '1px' }}>{d}</div>
             ))}
           </div>
         </div>
@@ -190,7 +194,7 @@ function OfficeHeatmap({ sessions }) {
         {/* Week rows */}
         {weeks.map((week, wi) => {
           const weekdaysInMonth = week.slice(0, 5).filter(d => d.getMonth() === month)
-          const officeCount = weekdaysInMonth.filter(d => officeDates.has(fmt(d))).length
+          const officeCount = weekdaysInMonth.filter(d => officeDates.has(fmt(d)) || wfhDates.has(fmt(d))).length
           const hasWeekdays = weekdaysInMonth.length > 0
           const indicatorColor = !hasWeekdays ? 'transparent'
             : officeCount >= 3 ? '#1a5c38'
@@ -198,30 +202,31 @@ function OfficeHeatmap({ sessions }) {
             : '#dc2626'
 
           return (
-            <div key={wi} style={{ display: 'grid', gridTemplateColumns: '6px 1fr', gap: '6px', marginBottom: '3px', alignItems: 'stretch' }}>
-              <div style={{ borderRadius: '2px', background: indicatorColor, minHeight: '28px' }} />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '3px' }}>
-                {week.map((day, di) => {
+            <div key={wi} style={{ marginBottom: '3px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '3px' }}>
+                {week.slice(0, 5).map((day, di) => {
                   const isThisMonth = day.getMonth() === month
                   const dateStr = fmt(day)
                   const isOffice = officeDates.has(dateStr)
-                  const isWeekend = di >= 5
+                  const isWFH = wfhDates.has(dateStr)
+                  const isAnnual = annualDates.has(dateStr)
                   const isFuture = dateStr > todayStr
                   const isToday = dateStr === todayStr
 
                   let bg, color
-                  if (!isThisMonth)   { bg = 'transparent';         color = 'transparent' }
-                  else if (isOffice)  { bg = '#1a5c38';              color = 'white' }
-                  else if (isWeekend) { bg = 'rgba(26,92,56,0.04)'; color = O.textFaint }
-                  else if (isFuture)  { bg = 'rgba(26,92,56,0.03)'; color = O.textFaint }
-                  else                { bg = 'rgba(26,92,56,0.07)'; color = O.textMuted }
+                  if (!isThisMonth)  { bg = 'transparent';         color = 'transparent' }
+                  else if (isOffice) { bg = '#1a5c38';              color = 'white' }
+                  else if (isWFH)    { bg = '#7c3aed';              color = 'white' }
+                  else if (isAnnual) { bg = '#f59e0b';              color = 'white' }
+                  else if (isFuture) { bg = 'rgba(26,92,56,0.03)'; color = O.textFaint }
+                  else               { bg = 'rgba(26,92,56,0.07)'; color = O.textMuted }
 
                   return (
                     <div key={di} style={{
                       aspectRatio: '1', borderRadius: '3px', background: bg,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '0.5em', color, fontFamily: 'Montserrat',
-                      fontWeight: isOffice ? 600 : 400,
+                      fontWeight: (isOffice || isWFH || isAnnual) ? 600 : 400,
                       border: isToday ? `1.5px solid ${O.green}` : '1.5px solid transparent',
                     }}>
                       {isThisMonth ? day.getDate() : ''}
@@ -241,6 +246,8 @@ function OfficeHeatmap({ sessions }) {
 export default function OfficeDays({ onBack }) {
   const [page, setPage] = useState('log')
   const [date, setDate] = useState('')
+  const [wfhApproved, setWfhApproved] = useState(false)
+  const [annualLeave, setAnnualLeave] = useState(false)
   const [saved, setSaved] = useState(false)
   const [sessions, setSessions] = useState([])
   const [editingId, setEditingId] = useState(null)
@@ -260,13 +267,16 @@ export default function OfficeDays({ onBack }) {
     if (!date) { alert('Please fill in the date'); return }
     const { error } = await supabase
       .from('office_days')
-      .insert([{ date }])
+      .insert([{ date, wfh_approved: wfhApproved, annual_leave: annualLeave }])
     if (error) {
       alert('Error saving: ' + error.message)
     } else {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
       setDate('')
+      setWfhApproved(false)
+      setAnnualLeave(false)
+      fetchSessions()
     }
   }
 
@@ -299,7 +309,7 @@ export default function OfficeDays({ onBack }) {
     return `${day}/${month}/${year}`
   }
 
-  const totalDays = sessions.length
+  const totalDays = sessions.filter(s => !s.wfh_approved && !s.annual_leave).length
 
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: O.textMuted,
@@ -362,9 +372,33 @@ export default function OfficeDays({ onBack }) {
           }}>
             <div style={{ fontSize: '0.58em', letterSpacing: '5px', color: O.greenMuted, textTransform: 'uppercase', marginBottom: '28px', fontWeight: 600 }}>New Entry</div>
 
-            <div style={{ marginBottom: '36px' }}>
+            <div style={{ marginBottom: '28px' }}>
               <div style={labelStyle}>Date</div>
               <input className="of-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={wfhApproved}
+                  onChange={e => setWfhApproved(e.target.checked)}
+                  style={{ accentColor: '#7c3aed', width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+                />
+                <span style={{ fontSize: '0.72em', letterSpacing: '1px', color: wfhApproved ? '#7c3aed' : O.textMuted, fontFamily: 'Montserrat', fontWeight: 500, transition: 'color 0.2s' }}>Approved work from home</span>
+              </label>
+            </div>
+
+            <div style={{ marginBottom: '36px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={annualLeave}
+                  onChange={e => setAnnualLeave(e.target.checked)}
+                  style={{ accentColor: '#f59e0b', width: '16px', height: '16px', cursor: 'pointer', flexShrink: 0 }}
+                />
+                <span style={{ fontSize: '0.72em', letterSpacing: '1px', color: annualLeave ? '#f59e0b' : O.textMuted, fontFamily: 'Montserrat', fontWeight: 500, transition: 'color 0.2s' }}>Annual leave</span>
+              </label>
             </div>
 
             <button className="of-save-btn" onClick={handleSubmit}>Record Day</button>
@@ -387,7 +421,7 @@ export default function OfficeDays({ onBack }) {
 
             {sessions.length > 0 && (
               <div style={{ padding: '16px 12px', background: 'white', border: '1px solid rgba(26,92,56,0.1)', borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(26,92,56,0.05)', marginBottom: '24px' }}>
-                <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: O.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>Total Days</div>
+                <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: O.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>Total days in office</div>
                 <div className="of-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600 }}>{totalDays}</div>
               </div>
             )}
