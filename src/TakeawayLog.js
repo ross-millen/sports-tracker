@@ -183,7 +183,7 @@ function TaDonutChart({ data }) {
             {total}
           </text>
           <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontFamily: 'Montserrat', fontSize: '7px', fill: '#1c0a00', letterSpacing: '2px', fontWeight: 700 }}>
-            ORDERS
+            VIA APP
           </text>
         </svg>
 
@@ -293,9 +293,17 @@ export default function TakeawayLog({ onBack }) {
   const avgOrder = totalOrders ? totalSpend / totalOrders : 0
 
   const restaurantCounts = {}
+  const restaurantDisplay = {}
   orders.forEach(o => {
-    if (o.restaurant) restaurantCounts[o.restaurant] = (restaurantCounts[o.restaurant] || 0) + 1
+    const raw = o.restaurant?.trim()
+    if (!raw) return
+    const key = raw.toLowerCase().replace(/[''ʼ‛]/g, "'")
+    restaurantCounts[key] = (restaurantCounts[key] || 0) + 1
+    if (!restaurantDisplay[key]) restaurantDisplay[key] = raw
   })
+  const rankedRestaurantsRaw = Object.entries(restaurantCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, count]) => [restaurantDisplay[key], count])
   const deliveryAppData = {}
   orders.forEach(o => {
     if (o.delivery_app) {
@@ -304,7 +312,7 @@ export default function TakeawayLog({ onBack }) {
     }
   })
 
-  const rankedRestaurants = Object.entries(restaurantCounts).sort((a, b) => b[1] - a[1])
+  const rankedRestaurants = rankedRestaurantsRaw
   const highestOrder = orders.length ? Math.max(...orders.map(o => parseFloat(o.price) || 0)) : 0
   const podium = [rankedRestaurants[1], rankedRestaurants[0], rankedRestaurants[2]]
   const podiumHeights = [70, 100, 50]
