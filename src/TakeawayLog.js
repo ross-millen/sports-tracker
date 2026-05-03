@@ -120,6 +120,13 @@ const TA_COLORS = [
   '#6aab7a', '#c9607a', '#8faa5a', '#c4956a',
 ]
 
+const DELIVERY_APP_COLORS = {
+  'Deliveroo':  '#00CCBC',
+  'Uber Eats':  '#06C167',
+  'Just Eat':   '#FF8000',
+  'Collection': '#A89070',
+}
+
 function TaDonutChart({ data }) {
   const [tooltip, setTooltip] = useState(null)
   const entries = Object.entries(data).sort((a, b) => b[1].count - a[1].count)
@@ -139,7 +146,7 @@ function TaDonutChart({ data }) {
     const x2 = cx + R * Math.cos(cumAngle)
     const y2 = cy + R * Math.sin(cumAngle)
     const large = angle > Math.PI ? 1 : 0
-    return { name, val, color: TA_COLORS[i % TA_COLORS.length], x1, y1, x2, y2, large, frac }
+    return { name, val, color: DELIVERY_APP_COLORS[key] || TA_COLORS[i % TA_COLORS.length], x1, y1, x2, y2, large, frac }
   })
 
   return (
@@ -229,7 +236,7 @@ export default function TakeawayLog({ onBack }) {
   const [editDeliveryApp, setEditDeliveryApp] = useState('')
   const [logsOpen, setLogsOpen] = useState(false)
 
-  const DELIVERY_APPS = ['Deliveroo', 'Uber Eats', 'Just Eat', 'Collection']
+  const DELIVERY_APPS = ['Deliveroo', 'Uber Eats', 'Just Eat']
 
   const fetchOrders = async () => {
     const { data, error } = await supabase
