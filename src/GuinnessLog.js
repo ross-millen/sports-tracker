@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 
 const G = {
@@ -97,143 +97,53 @@ const BUBBLE_COLORS = [
 
 function GoldBubbleChart({ data }) {
   const [tooltip, setTooltip] = useState(null)
-  const containerRef = useRef(null)
-  const animRef = useRef(null)
-  const stateRef = useRef([])
-  const [positions, setPositions] = useState([])
-
   const entries = Object.values(data).sort((a, b) => b.pints - a.pints)
   const maxPints = entries.length > 0 ? entries[0].pints : 1
   const sizes = entries.map(e => Math.round(80 + Math.sqrt(e.pints / maxPints) * 35))
-  const sizesRef = useRef(sizes)
-  sizesRef.current = sizes
-
-  const resolveCollisions = (bs, W2, H2) => {
-    for (let pass = 0; pass < 5; pass++) {
-      for (let i = 0; i < bs.length; i++) {
-        for (let j = i + 1; j < bs.length; j++) {
-          const ri = sizesRef.current[i] / 2, rj = sizesRef.current[j] / 2
-          const dx = (bs[j].x + rj) - (bs[i].x + ri)
-          const dy = (bs[j].y + rj) - (bs[i].y + ri)
-          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
-          const minDist = ri + rj
-          if (dist < minDist) {
-            const nx = dx / dist, ny = dy / dist
-            const push = (minDist - dist) / 2
-            bs[i].x -= nx * push; bs[i].y -= ny * push
-            bs[j].x += nx * push; bs[j].y += ny * push
-            const di = sizesRef.current[i], dj = sizesRef.current[j]
-            bs[i].x = Math.max(0, Math.min(W2 - di, bs[i].x))
-            bs[i].y = Math.max(0, Math.min(H2 - di, bs[i].y))
-            bs[j].x = Math.max(0, Math.min(W2 - dj, bs[j].x))
-            bs[j].y = Math.max(0, Math.min(H2 - dj, bs[j].y))
-          }
-        }
-      }
-    }
-  }
-
-  useEffect(() => {
-    if (!containerRef.current || entries.length === 0) return
-    const W = containerRef.current.offsetWidth
-    const H = 260
-    stateRef.current = entries.map((_, i) => {
-      const d = sizesRef.current[i]
-      return {
-        x: Math.random() * Math.max(1, W - d),
-        y: Math.random() * Math.max(1, H - d),
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
-      }
-    })
-    resolveCollisions(stateRef.current, W, H)
-
-    const tick = () => {
-      const W2 = containerRef.current ? containerRef.current.offsetWidth : W
-      const H2 = 260
-      const bs = stateRef.current.map(b => ({ ...b }))
-      for (let i = 0; i < bs.length; i++) { bs[i].x += bs[i].vx; bs[i].y += bs[i].vy }
-      for (let i = 0; i < bs.length; i++) {
-        const d = sizesRef.current[i]
-        if (bs[i].x <= 0) { bs[i].x = 0; bs[i].vx = Math.abs(bs[i].vx) }
-        if (bs[i].x + d >= W2) { bs[i].x = W2 - d; bs[i].vx = -Math.abs(bs[i].vx) }
-        if (bs[i].y <= 0) { bs[i].y = 0; bs[i].vy = Math.abs(bs[i].vy) }
-        if (bs[i].y + d >= H2) { bs[i].y = H2 - d; bs[i].vy = -Math.abs(bs[i].vy) }
-      }
-      for (let i = 0; i < bs.length; i++) {
-        for (let j = i + 1; j < bs.length; j++) {
-          const ri = sizesRef.current[i] / 2, rj = sizesRef.current[j] / 2
-          const dx = (bs[j].x + rj) - (bs[i].x + ri)
-          const dy = (bs[j].y + rj) - (bs[i].y + ri)
-          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01
-          const minDist = ri + rj
-          if (dist < minDist) {
-            const nx = dx / dist, ny = dy / dist
-            const push = (minDist - dist) / 2
-            bs[i].x -= nx * push; bs[i].y -= ny * push
-            bs[j].x += nx * push; bs[j].y += ny * push
-            const dvn = (bs[j].vx - bs[i].vx) * nx + (bs[j].vy - bs[i].vy) * ny
-            if (dvn < 0) {
-              bs[i].vx += dvn * nx; bs[i].vy += dvn * ny
-              bs[j].vx -= dvn * nx; bs[j].vy -= dvn * ny
-            }
-          }
-        }
-      }
-      stateRef.current = bs
-      setPositions(bs.map(b => ({ x: b.x, y: b.y })))
-      animRef.current = requestAnimationFrame(tick)
-    }
-    animRef.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(animRef.current)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries.length])
 
   if (entries.length === 0) return null
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', height: '260px', overflow: 'hidden', borderRadius: '4px' }}>
-      {entries.map((e, i) => {
-        const pos = positions[i] || { x: 0, y: 0 }
-        const d = sizes[i]
-        const fontSize = Math.max(9, Math.floor(d * 0.11))
-        return (
-          <div
-            key={e.label}
-            style={{
-              position: 'absolute',
-              left: `${pos.x}px`, top: `${pos.y}px`,
-              width: `${d}px`, height: `${d}px`,
-              borderRadius: '50%',
-              background: BUBBLE_COLORS[i % BUBBLE_COLORS.length],
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              opacity: 0.9,
-              boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
-              cursor: 'default', userSelect: 'none',
-            }}
-            onMouseMove={ev => setTooltip({ x: ev.clientX, y: ev.clientY, e })}
-            onMouseLeave={() => setTooltip(null)}
-          >
-            <div style={{
-              fontSize: `${fontSize}px`,
-              color: G.bg, fontFamily: 'Montserrat', fontWeight: 700,
-              letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1.25,
-              maxWidth: `${Math.floor(d * 0.78)}px`,
-              overflowWrap: 'break-word',
-            }}>
-              {e.label}
+    <div style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
+        {entries.map((e, i) => {
+          const d = sizes[i]
+          const fontSize = Math.max(9, Math.floor(d * 0.11))
+          return (
+            <div
+              key={e.label}
+              style={{
+                width: `${d}px`, height: `${d}px`,
+                borderRadius: '50%',
+                background: BUBBLE_COLORS[i % BUBBLE_COLORS.length],
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                opacity: 0.9, flexShrink: 0,
+                boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+                cursor: 'default', userSelect: 'none',
+              }}
+              onMouseMove={ev => setTooltip({ x: ev.clientX, y: ev.clientY, e })}
+              onMouseLeave={() => setTooltip(null)}
+            >
+              <div style={{
+                fontSize: `${fontSize}px`,
+                color: G.bg, fontFamily: 'Montserrat', fontWeight: 700,
+                letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1.25,
+                maxWidth: `${Math.floor(d * 0.78)}px`, overflowWrap: 'break-word',
+              }}>
+                {e.label}
+              </div>
+              <div style={{
+                fontSize: `${Math.max(7, Math.floor(fontSize * 0.85))}px`,
+                color: 'rgba(13,12,11,0.65)', fontFamily: 'Montserrat',
+                fontWeight: 600, letterSpacing: '0.5px', marginTop: '2px',
+              }}>
+                {e.pints}p
+              </div>
             </div>
-            <div style={{
-              fontSize: `${Math.max(7, Math.floor(fontSize * 0.85))}px`,
-              color: 'rgba(13,12,11,0.65)', fontFamily: 'Montserrat',
-              fontWeight: 600, letterSpacing: '0.5px', marginTop: '2px',
-            }}>
-              {e.pints}p
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
       {tooltip && (
         <div style={{
           position: 'fixed', left: tooltip.x + 12, top: tooltip.y - 40,
