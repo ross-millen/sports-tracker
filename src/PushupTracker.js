@@ -504,7 +504,7 @@ export default function PushupTracker({ onBack }) {
                       <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: P.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
                       {kpi.label === 'Day Streak'
                         ? <FlameStreak value={kpi.value} />
-                        : <div className="pu-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600 }}>{kpi.value}</div>
+                        : <div className="pu-kpi-shimmer" style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: '1.7em', fontWeight: 700, letterSpacing: '-0.5px' }}>{kpi.value}</div>
                       }
                       {kpi.sub && <div style={{ fontSize: '0.5em', letterSpacing: '1px', color: P.textFaint, marginTop: '6px', fontFamily: 'Montserrat' }}>{kpi.sub}</div>}
                     </div>

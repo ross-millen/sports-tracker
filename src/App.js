@@ -5,9 +5,10 @@ import OfficeDays from './OfficeDays'
 import ArsenalTracker from './ArsenalTracker'
 import FootballLog from './FootballLog'
 import TakeawayLog from './TakeawayLog'
+import Dashboard from './Dashboard'
 
 const globalStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@300;400;500;600&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #f5f0eb; min-height: 100vh; }
@@ -190,31 +191,59 @@ function App() {
           <p style={{ color: 'rgba(80,20,20,0.4)', fontSize: '0.6em', letterSpacing: '5px', textTransform: 'uppercase', fontWeight: 500 }}>
             Active since 4th April 2026
           </p>
-          <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-            {[
-              { label: 'Football', key: 'football' },
-              { label: 'Arsenal', key: 'arsenal' },
-              { label: 'Guinness', key: 'guinness' },
-              { label: 'Pushups', key: 'pushups' },
-              { label: 'Office', key: 'office' },
-              { label: 'Takeaway', key: 'takeaways' },
-            ].map(item => (
-              <button
-                key={item.key}
-                onClick={() => openTracker(item.key)}
-                style={{
-                  background: 'none', border: '1px solid rgba(139,0,0,0.2)', cursor: 'pointer',
-                  color: 'rgba(80,20,20,0.5)', fontSize: '0.68em', letterSpacing: '4px',
-                  textTransform: 'uppercase', fontFamily: 'Montserrat', fontWeight: 500,
-                  padding: '18px 0', borderRadius: '2px', transition: 'all 0.3s ease',
-                  width: '260px', textAlign: 'center',
-                }}
-                onMouseOver={e => { e.currentTarget.style.background = '#8b0000'; e.currentTarget.style.color = '#f5f0eb'; e.currentTarget.style.borderColor = '#8b0000' }}
-                onMouseOut={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'rgba(80,20,20,0.5)'; e.currentTarget.style.borderColor = 'rgba(139,0,0,0.2)' }}
-              >
-                {item.label} →
-              </button>
-            ))}
+          <div style={{ marginTop: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0' }}>
+
+            {/* Dashboard — primary card */}
+            <button
+              onClick={() => openTracker('dashboard')}
+              style={{
+                background: 'none', border: '1px solid rgba(139,0,0,0.2)', cursor: 'pointer',
+                color: 'rgba(80,20,20,0.5)', fontSize: '0.68em', letterSpacing: '4px',
+                textTransform: 'uppercase', fontFamily: 'Montserrat', fontWeight: 500,
+                padding: '18px 0', borderRadius: '2px', transition: 'all 0.3s ease',
+                width: '260px', textAlign: 'center',
+              }}
+              onMouseOver={e => { e.currentTarget.style.background = '#8b0000'; e.currentTarget.style.color = '#f5f0eb'; e.currentTarget.style.borderColor = '#8b0000' }}
+              onMouseOut={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'rgba(80,20,20,0.5)'; e.currentTarget.style.borderColor = 'rgba(139,0,0,0.2)' }}
+            >
+              Dashboard →
+            </button>
+
+            {/* Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '260px', margin: '28px 0 20px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(139,0,0,0.12)' }} />
+              <span style={{ color: 'rgba(80,20,20,0.25)', fontSize: '0.52em', letterSpacing: '4px', textTransform: 'uppercase', fontFamily: 'Montserrat', fontWeight: 500 }}>Trackers</span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(139,0,0,0.12)' }} />
+            </div>
+
+            {/* Tracker buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+              {[
+                { label: 'Football', key: 'football' },
+                { label: 'Arsenal', key: 'arsenal' },
+                { label: 'Guinness', key: 'guinness' },
+                { label: 'Pushups', key: 'pushups' },
+                { label: 'Office', key: 'office' },
+                { label: 'Takeaway', key: 'takeaways' },
+              ].map(item => (
+                <button
+                  key={item.key}
+                  onClick={() => openTracker(item.key)}
+                  style={{
+                    background: 'none', border: '1px solid rgba(139,0,0,0.2)', cursor: 'pointer',
+                    color: 'rgba(80,20,20,0.5)', fontSize: '0.68em', letterSpacing: '4px',
+                    textTransform: 'uppercase', fontFamily: 'Montserrat', fontWeight: 500,
+                    padding: '18px 0', borderRadius: '2px', transition: 'all 0.3s ease',
+                    width: '260px', textAlign: 'center',
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.background = '#8b0000'; e.currentTarget.style.color = '#f5f0eb'; e.currentTarget.style.borderColor = '#8b0000' }}
+                  onMouseOut={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'rgba(80,20,20,0.5)'; e.currentTarget.style.borderColor = 'rgba(139,0,0,0.2)' }}
+                >
+                  {item.label} →
+                </button>
+              ))}
+            </div>
+
           </div>
         </div>
       </div>
@@ -232,6 +261,7 @@ function App() {
             animation: `${closing ? 'slideOutRight' : 'slideInRight'} 0.28s ease forwards`,
           }}
         >
+          {tracker === 'dashboard' && <Dashboard      onBack={closeTracker} />}
           {tracker === 'arsenal'  && <ArsenalTracker onBack={closeTracker} />}
           {tracker === 'guinness' && <GuinnessLog    onBack={closeTracker} />}
           {tracker === 'pushups'  && <PushupTracker  onBack={closeTracker} />}

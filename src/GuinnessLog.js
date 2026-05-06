@@ -462,7 +462,7 @@ export default function GuinnessLog({ onBack }) {
                       borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
                     }}>
                       <div style={{ fontSize: '0.55em', letterSpacing: '2px', color: 'rgba(245,236,215,0.3)', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
-                      <div className="gu-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.9em', fontWeight: 600 }}>{kpi.value}</div>
+                      <div className="gu-kpi-shimmer" style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: '1.9em', fontWeight: 700, letterSpacing: '-0.5px' }}>{kpi.value}</div>
                       {kpi.sub && <div style={{ fontSize: '0.5em', letterSpacing: '1px', color: 'rgba(245,236,215,0.3)', marginTop: '6px', fontFamily: 'Montserrat' }}>{kpi.sub}</div>}
                     </div>
                   ))}

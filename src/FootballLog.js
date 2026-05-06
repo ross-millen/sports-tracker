@@ -496,7 +496,7 @@ export default function FootballLog({ onBack }) {
                     borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(139,0,0,0.05)',
                   }}>
                     <div style={{ fontSize: '0.55em', letterSpacing: '2px', color: 'rgba(80,20,20,0.35)', textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500 }}>{kpi.label}</div>
-                    <div className="kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.9em', fontWeight: 600 }}>{kpi.value}</div>
+                    <div className="kpi-shimmer" style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: '1.9em', fontWeight: 700, letterSpacing: '-0.5px' }}>{kpi.value}</div>
                   </div>
                 ))}
               </div>

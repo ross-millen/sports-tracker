@@ -337,6 +337,8 @@ export default function ArsenalTracker({ onBack }) {
   const [editVenue, setEditVenue] = useState('')
   const [editResult, setEditResult] = useState('')
   const [editScore, setEditScore] = useState('')
+  const [goalscorers, setGoalscorers] = useState('')
+  const [editGoalscorers, setEditGoalscorers] = useState('')
 
   const fetchGames = async () => {
     const { data, error } = await supabase
@@ -354,11 +356,11 @@ export default function ArsenalTracker({ onBack }) {
     if (!date || !opponent) { alert('Please fill in date and opponent'); return }
     const { error } = await supabase
       .from('arsenal_games')
-      .insert([{ date, opponent, competition: competition === 'Champions League' ? `Champions League · ${clStage}` : competition === 'Carabao Cup' ? `Carabao Cup · ${carabaoStage}` : competition, venue, result, score: score || null }])
+      .insert([{ date, opponent, competition: competition === 'Champions League' ? `Champions League · ${clStage}` : competition === 'Carabao Cup' ? `Carabao Cup · ${carabaoStage}` : competition, venue, result, score: score || null, goalscorers: goalscorers.trim() || null }])
     if (error) { alert('Error saving: ' + error.message) } else {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
-      setDate(''); setOpponent(''); setScore('')
+      setDate(''); setOpponent(''); setScore(''); setGoalscorers('')
       setCompetition('Premier League'); setVenue('Home'); setResult('W')
     }
   }
@@ -372,11 +374,12 @@ export default function ArsenalTracker({ onBack }) {
     setEditCarabaoStage(isCarabao ? g.competition.split(' · ')[1] : 'Round 1')
     setEditVenue(g.venue || 'Home')
     setEditResult(g.result || 'W'); setEditScore(g.score || '')
+    setEditGoalscorers(g.goalscorers || '')
   }
 
   const cancelEdit = () => {
     setEditingId(null); setEditDate(''); setEditOpponent(''); setEditCompetition('')
-    setEditVenue(''); setEditResult(''); setEditScore('')
+    setEditVenue(''); setEditResult(''); setEditScore(''); setEditGoalscorers('')
   }
 
   const deleteGame = async (id) => {
@@ -388,7 +391,7 @@ export default function ArsenalTracker({ onBack }) {
   const saveEdit = async (id) => {
     const { error } = await supabase
       .from('arsenal_games')
-      .update({ date: editDate, opponent: editOpponent, competition: editCompetition === 'Champions League' ? `Champions League · ${editClStage}` : editCompetition === 'Carabao Cup' ? `Carabao Cup · ${editCarabaoStage}` : editCompetition, venue: editVenue, result: editResult, score: editScore || null })
+      .update({ date: editDate, opponent: editOpponent, competition: editCompetition === 'Champions League' ? `Champions League · ${editClStage}` : editCompetition === 'Carabao Cup' ? `Carabao Cup · ${editCarabaoStage}` : editCompetition, venue: editVenue, result: editResult, score: editScore || null, goalscorers: editGoalscorers.trim() || null })
       .eq('id', id)
     if (error) { alert('Error updating: ' + error.message) } else { setEditingId(null); fetchGames() }
   }
@@ -511,9 +514,23 @@ export default function ArsenalTracker({ onBack }) {
               </div>
             </div>
 
-            <div style={{ marginBottom: '36px' }}>
+            <div style={{ marginBottom: '24px' }}>
               <div style={labelStyle}>Score</div>
               <input className="ar-input" type="text" placeholder="2-1" value={score} onChange={e => setScore(e.target.value)} />
+            </div>
+
+            <div style={{ marginBottom: '36px' }}>
+              <div style={labelStyle}>Goalscorers <span style={{ opacity: 0.5 }}>(optional)</span></div>
+              <input className="ar-input" type="text" placeholder="Saka, Havertz, Rice..." value={goalscorers} onChange={e => setGoalscorers(e.target.value)} />
+              {goalscorers.trim() && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                  {goalscorers.split(',').map(n => n.trim()).filter(Boolean).map((name, i) => (
+                    <span key={i} style={{ fontSize: '0.55em', letterSpacing: '1px', background: A.redFaint, color: A.red, border: `1px solid rgba(239,1,7,0.15)`, borderRadius: '2px', padding: '3px 8px', fontFamily: 'Montserrat', fontWeight: 500 }}>
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <button className="ar-save-btn" onClick={handleSubmit}>Record Game</button>
@@ -543,7 +560,7 @@ export default function ArsenalTracker({ onBack }) {
                   ].map(kpi => (
                     <div key={kpi.label} style={{ padding: '16px 12px', background: 'white', border: '1px solid rgba(239,1,7,0.1)', borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
                       <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: A.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
-                      <div className="ar-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: '1.7em', fontWeight: 600 }}>{kpi.value}</div>
+                      <div className="ar-kpi-shimmer" style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: '1.7em', fontWeight: 700, letterSpacing: '-0.5px' }}>{kpi.value}</div>
                     </div>
                   ))}
                 </div>
@@ -623,9 +640,22 @@ export default function ArsenalTracker({ onBack }) {
                             {RESULTS.map(r => <option key={r} value={r}>{resultLabel[r]}</option>)}
                           </select>
                         </div>
-                        <div style={{ marginBottom: '16px' }}>
+                        <div style={{ marginBottom: '12px' }}>
                           <div style={editLabelStyle}>Score</div>
                           <input className="ar-inline-input" type="text" value={editScore} onChange={e => setEditScore(e.target.value)} placeholder="e.g. 2-1" />
+                        </div>
+                        <div style={{ marginBottom: '16px' }}>
+                          <div style={editLabelStyle}>Goalscorers</div>
+                          <input className="ar-inline-input" type="text" value={editGoalscorers} onChange={e => setEditGoalscorers(e.target.value)} placeholder="Saka, Havertz..." />
+                          {editGoalscorers.trim() && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '8px' }}>
+                              {editGoalscorers.split(',').map(n => n.trim()).filter(Boolean).map((name, i) => (
+                                <span key={i} style={{ fontSize: '0.55em', letterSpacing: '1px', background: A.redFaint, color: A.red, border: `1px solid rgba(239,1,7,0.15)`, borderRadius: '2px', padding: '3px 8px', fontFamily: 'Montserrat', fontWeight: 500 }}>
+                                  {name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <button className="ar-delete-btn" onClick={() => deleteGame(game.id)}>Delete</button>
@@ -654,6 +684,15 @@ export default function ArsenalTracker({ onBack }) {
                               </span>
                               {game.score && <span style={{ fontSize: '0.6em', color: A.textMuted, fontFamily: 'Montserrat', letterSpacing: '2px' }}>{game.score}</span>}
                             </div>
+                            {game.goalscorers && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '10px' }}>
+                                {game.goalscorers.split(',').map(n => n.trim()).filter(Boolean).map((name, i) => (
+                                  <span key={i} style={{ fontSize: '0.52em', letterSpacing: '1px', background: A.redFaint, color: A.red, border: `1px solid rgba(239,1,7,0.12)`, borderRadius: '2px', padding: '2px 7px', fontFamily: 'Montserrat', fontWeight: 500 }}>
+                                    {name}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <button className="ar-edit-btn" onClick={() => startEdit(game)}>Edit</button>
                         </div>

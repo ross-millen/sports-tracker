@@ -415,7 +415,7 @@ export default function OfficeDays({ onBack }) {
             {sessions.length > 0 && (
               <div style={{ padding: '16px 12px', background: 'white', border: '1px solid rgba(26,92,56,0.1)', borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(26,92,56,0.05)', marginBottom: '24px' }}>
                 <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: O.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>Total days in office</div>
-                <div className="of-kpi-shimmer" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600 }}>{totalDays}</div>
+                <div className="of-kpi-shimmer" style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: '1.7em', fontWeight: 700, letterSpacing: '-0.5px' }}>{totalDays}</div>
               </div>
             )}
 

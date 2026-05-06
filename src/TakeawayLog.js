@@ -441,7 +441,7 @@ export default function TakeawayLog({ onBack }) {
                   ].map(kpi => (
                     <div key={kpi.label} style={{ padding: '16px 12px', background: 'white', border: '1px solid rgba(146,64,14,0.1)', borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(146,64,14,0.05)' }}>
                       <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: T.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
-                      <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.7em', fontWeight: 600, color: T.orange }}>{kpi.value}</div>
+                      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: '1.7em', fontWeight: 700, letterSpacing: '-0.5px', color: T.orange }}>{kpi.value}</div>
                     </div>
                   ))}
                 </div>
