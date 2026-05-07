@@ -16,6 +16,8 @@ const A = {
   textFaint: 'rgba(26,0,0,0.25)',
 }
 
+const normaliseGoalscorers = s => s.replace(/gyokeres/gi, 'Gyökeres')
+
 const COMPETITIONS = ['Premier League', 'Champions League', 'FA Cup', 'Carabao Cup']
 const CL_STAGES = ['Group Stage', 'Round of 16', 'Quarter Final', 'Semi Final', 'Final']
 const CARABAO_STAGES = ['Round 1', 'Round 2', 'Round 3', 'Round 4', 'Quarter Final', 'Semi Final', 'Final']
@@ -491,7 +493,7 @@ export default function ArsenalTracker({ onBack }) {
     if (!date || !opponent) { alert('Please fill in date and opponent'); return }
     const { error } = await supabase
       .from('arsenal_games')
-      .insert([{ date, opponent, competition: competition === 'Champions League' ? `Champions League · ${clStage}` : competition === 'Carabao Cup' ? `Carabao Cup · ${carabaoStage}` : competition, venue, result, score: score || null, goalscorers: goalscorers.trim() || null }])
+      .insert([{ date, opponent, competition: competition === 'Champions League' ? `Champions League · ${clStage}` : competition === 'Carabao Cup' ? `Carabao Cup · ${carabaoStage}` : competition, venue, result, score: score || null, goalscorers: goalscorers.trim() ? normaliseGoalscorers(goalscorers.trim()) : null }])
     if (error) { alert('Error saving: ' + error.message) } else {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
@@ -526,7 +528,7 @@ export default function ArsenalTracker({ onBack }) {
   const saveEdit = async (id) => {
     const { error } = await supabase
       .from('arsenal_games')
-      .update({ date: editDate, opponent: editOpponent, competition: editCompetition === 'Champions League' ? `Champions League · ${editClStage}` : editCompetition === 'Carabao Cup' ? `Carabao Cup · ${editCarabaoStage}` : editCompetition, venue: editVenue, result: editResult, score: editScore || null, goalscorers: editGoalscorers.trim() || null })
+      .update({ date: editDate, opponent: editOpponent, competition: editCompetition === 'Champions League' ? `Champions League · ${editClStage}` : editCompetition === 'Carabao Cup' ? `Carabao Cup · ${editCarabaoStage}` : editCompetition, venue: editVenue, result: editResult, score: editScore || null, goalscorers: editGoalscorers.trim() ? normaliseGoalscorers(editGoalscorers.trim()) : null })
       .eq('id', id)
     if (error) { alert('Error updating: ' + error.message) } else { setEditingId(null); fetchGames() }
   }
