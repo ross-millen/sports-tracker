@@ -272,7 +272,7 @@ function FlameStreak({ value }) {
       <div className="pu-kpi-shimmer" style={{
         position: 'absolute', top: '52%', left: 0, right: 0,
         transform: 'translateY(-50%)',
-        textAlign: 'center', fontFamily: "'Cormorant Garamond', serif",
+        textAlign: 'center', fontFamily: "'Inter', system-ui, sans-serif",
         fontSize: '1.5em', fontWeight: 700,
         lineHeight: 1, zIndex: 10,
       }}>
