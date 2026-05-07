@@ -30,23 +30,6 @@ const styles = `
     color: ${C.text};
   }
 
-  .db-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 32px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid ${C.border};
-  }
-
-  .db-title {
-    font-size: 0.8em;
-    font-weight: 600;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: ${C.muted};
-  }
-
   .db-back-btn {
     background: none;
     border: none;
@@ -322,9 +305,15 @@ export default function Dashboard({ onBack }) {
       <style>{styles}</style>
       <div className="db-wrap">
 
-        <div className="db-header">
-          <span className="db-title">Dashboard</span>
+        <div style={{ marginBottom: '24px' }}>
           <button className="db-back-btn" onClick={onBack}>← home</button>
+        </div>
+
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.8em, 6vw, 2.8em)', fontWeight: 300, color: '#8b0000', letterSpacing: '6px', textTransform: 'uppercase', lineHeight: 1 }}>
+            Dashboard
+          </h2>
+          <div style={{ width: '40px', height: '1px', background: 'linear-gradient(90deg, transparent, #8b0000, transparent)', margin: '14px auto' }} />
         </div>
 
         {loading ? (
