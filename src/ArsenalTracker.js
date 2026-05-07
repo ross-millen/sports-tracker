@@ -415,57 +415,78 @@ function GoalscorerLeaderboard({ games }) {
 function OpponentResultBars({ games }) {
   const [hovered, setHovered] = useState(null)
 
-  const byOpponent = {}
+  const COMP_ORDER = ['Premier League', 'Champions League', 'FA Cup', 'Carabao Cup']
+
+  const byComp = {}
   games.forEach(g => {
     if (!g.opponent) return
-    if (!byOpponent[g.opponent]) byOpponent[g.opponent] = { label: g.opponent, W: 0, D: 0, L: 0 }
-    if (g.result) byOpponent[g.opponent][g.result]++
+    const comp = g.competition ? g.competition.split(' · ')[0] : 'Other'
+    if (!byComp[comp]) byComp[comp] = {}
+    if (!byComp[comp][g.opponent]) byComp[comp][g.opponent] = { label: g.opponent, W: 0, D: 0, L: 0 }
+    if (g.result) byComp[comp][g.opponent][g.result]++
   })
 
-  const data = Object.values(byOpponent)
-    .map(e => ({ ...e, total: e.W + e.D + e.L }))
-    .sort((a, b) => b.total - a.total)
+  const comps = COMP_ORDER.filter(c => byComp[c])
 
-  if (data.length === 0) return null
-
-  const maxTotal = data[0].total
+  if (comps.length === 0) return null
 
   return (
     <div>
-      {data.map(e => {
-        const wPct = e.total ? (e.W / e.total) * 100 : 0
-        const dPct = e.total ? (e.D / e.total) * 100 : 0
-        const lPct = e.total ? (e.L / e.total) * 100 : 0
-        const barWidthPct = (e.total / maxTotal) * 100
-        const isHov = hovered === e.label
+      {comps.map((comp, ci) => {
+        const opponents = Object.values(byComp[comp])
+          .map(e => ({ ...e, total: e.W + e.D + e.L }))
+          .sort((a, b) => b.total - a.total)
+        const maxTotal = opponents[0].total
 
         return (
-          <div key={e.label}
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '9px', cursor: 'default' }}
-            onMouseEnter={() => setHovered(e.label)}
-            onMouseLeave={() => setHovered(null)}
-          >
-            <div style={{ width: '130px', flexShrink: 0, fontSize: '0.67em', fontFamily: 'Montserrat', fontWeight: isHov ? 600 : 500, color: isHov ? A.text : 'rgba(26,0,0,0.6)', transition: 'color 0.15s', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.3px' }}>
-              {e.label}
+          <div key={comp} style={{ marginBottom: ci < comps.length - 1 ? '20px' : 0 }}>
+            {/* Inline divider with competition name */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(239,1,7,0.07)' }} />
+              <span style={{ fontSize: '0.46em', letterSpacing: '2.5px', color: 'rgba(26,0,0,0.25)', textTransform: 'uppercase', fontFamily: 'Montserrat', fontWeight: 600, flexShrink: 0 }}>
+                {comp}
+              </span>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(239,1,7,0.07)' }} />
             </div>
-            <div style={{ flex: 1, height: '12px', background: 'rgba(239,1,7,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ display: 'flex', height: '100%', width: `${barWidthPct}%`, opacity: isHov ? 1 : 0.8, transition: 'opacity 0.15s' }}>
-                {wPct > 0 && <div style={{ width: `${wPct}%`, background: '#1a5c38' }} />}
-                {dPct > 0 && <div style={{ width: `${dPct}%`, background: '#d97706' }} />}
-                {lPct > 0 && <div style={{ width: `${lPct}%`, background: '#EF0107' }} />}
-              </div>
-            </div>
-            <div style={{ width: '72px', flexShrink: 0, textAlign: 'right' }}>
-              {isHov ? (
-                <span style={{ fontSize: '0.6em', fontFamily: 'Montserrat', fontWeight: 600, color: A.text, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                  {e.W}W&nbsp;&nbsp;{e.D}D&nbsp;&nbsp;{e.L}L
-                </span>
-              ) : (
-                <span style={{ fontSize: '0.57em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.32)', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                  {e.total} game{e.total !== 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
+
+            {opponents.map(e => {
+              const wPct = e.total ? (e.W / e.total) * 100 : 0
+              const dPct = e.total ? (e.D / e.total) * 100 : 0
+              const lPct = e.total ? (e.L / e.total) * 100 : 0
+              const barWidthPct = (e.total / maxTotal) * 100
+              const hovKey = `${comp}·${e.label}`
+              const isHov = hovered === hovKey
+
+              return (
+                <div key={e.label}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '9px', cursor: 'default' }}
+                  onMouseEnter={() => setHovered(hovKey)}
+                  onMouseLeave={() => setHovered(null)}
+                >
+                  <div style={{ width: '130px', flexShrink: 0, fontSize: '0.67em', fontFamily: 'Montserrat', fontWeight: isHov ? 600 : 500, color: isHov ? A.text : 'rgba(26,0,0,0.6)', transition: 'color 0.15s', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '0.3px' }}>
+                    {e.label}
+                  </div>
+                  <div style={{ flex: 1, height: '12px', background: 'rgba(239,1,7,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', height: '100%', width: `${barWidthPct}%`, opacity: isHov ? 1 : 0.8, transition: 'opacity 0.15s' }}>
+                      {wPct > 0 && <div style={{ width: `${wPct}%`, background: '#1a5c38' }} />}
+                      {dPct > 0 && <div style={{ width: `${dPct}%`, background: '#d97706' }} />}
+                      {lPct > 0 && <div style={{ width: `${lPct}%`, background: '#EF0107' }} />}
+                    </div>
+                  </div>
+                  <div style={{ width: '72px', flexShrink: 0, textAlign: 'right' }}>
+                    {isHov ? (
+                      <span style={{ fontSize: '0.6em', fontFamily: 'Montserrat', fontWeight: 600, color: A.text, letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                        {e.W}W&nbsp;&nbsp;{e.D}D&nbsp;&nbsp;{e.L}L
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.57em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.32)', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
+                        {e.total} game{e.total !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )
       })}
