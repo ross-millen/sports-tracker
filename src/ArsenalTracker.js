@@ -334,8 +334,6 @@ function ResultDonut({ games }) {
           })}
           <circle cx={cx} cy={cy} r={R - stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
           <circle cx={cx} cy={cy} r={R + stroke / 2} fill="none" stroke="black" strokeWidth="1.5" />
-          <text x={cx} y={cy - 8} textAnchor="middle" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '22px', fill: '#2a0a0a', fontWeight: 600 }}>{total}</text>
-          <text x={cx} y={cy + 12} textAnchor="middle" style={{ fontFamily: 'Montserrat', fontSize: '7px', fill: '#1a1a1a', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 700 }}>GAMES</text>
         </svg>
         <div style={{ flex: 1, minWidth: '100px' }}>
           {slices.map((s, i) => (
@@ -359,6 +357,60 @@ function ResultDonut({ games }) {
   )
 }
 
+
+function GoalscorerLeaderboard({ games }) {
+  const tally = {}
+  games.forEach(g => {
+    if (!g.goalscorers) return
+    g.goalscorers.split(',').map(n => n.trim()).filter(Boolean).forEach(name => {
+      tally[name] = (tally[name] || 0) + 1
+    })
+  })
+
+  const entries = Object.entries(tally)
+    .map(([name, goals]) => ({ name, goals }))
+    .sort((a, b) => b.goals - a.goals)
+
+  if (entries.length === 0) return null
+
+  const max = entries[0].goals
+
+  return (
+    <div>
+      {entries.map((e, i) => (
+        <div key={e.name} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: i < entries.length - 1 ? '14px' : 0 }}>
+          <div style={{
+            width: '18px', flexShrink: 0, textAlign: 'right',
+            fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 700,
+            letterSpacing: '1px',
+            color: i === 0 ? A.red : i === 1 ? 'rgba(239,1,7,0.45)' : 'rgba(239,1,7,0.25)',
+          }}>
+            {i + 1}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
+              <span style={{ fontSize: '0.72em', fontFamily: 'Montserrat', color: A.text, fontWeight: 500, letterSpacing: '0.5px' }}>
+                {e.name}
+              </span>
+              <span style={{ fontSize: '0.58em', fontFamily: 'Montserrat', color: A.redMuted, letterSpacing: '1px', flexShrink: 0, fontWeight: 600 }}>
+                {e.goals} {e.goals === 1 ? 'goal' : 'goals'}
+              </span>
+            </div>
+            <div style={{ height: '2px', background: 'rgba(239,1,7,0.08)', borderRadius: '1px' }}>
+              <div style={{
+                height: '100%', width: `${(e.goals / max) * 100}%`,
+                background: i === 0
+                  ? `linear-gradient(90deg, ${A.red}, #ff3333)`
+                  : `rgba(239,1,7,${Math.max(0.15, 0.4 - i * 0.05)})`,
+                borderRadius: '1px',
+              }} />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function OpponentResultBars({ games }) {
   const [hovered, setHovered] = useState(null)
@@ -725,6 +777,14 @@ export default function ArsenalTracker({ onBack }) {
               <p style={{ color: A.textFaint, fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No games recorded yet.</p>
             ) : (
               <>
+                {/* Goalscorers */}
+                {games.some(g => g.goalscorers) && (
+                  <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '20px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
+                    <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Goalscorers</div>
+                    <GoalscorerLeaderboard games={games} />
+                  </div>
+                )}
+
                 <button onClick={() => lock.guard(() => setLogsOpen(o => !o))} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(239,1,7,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
                   <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries{!lock.unlocked && <LockIcon />}</span>
                   <span style={{ fontSize: '0.8em', color: A.redMuted, fontFamily: 'Montserrat', transition: 'transform 0.2s', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
