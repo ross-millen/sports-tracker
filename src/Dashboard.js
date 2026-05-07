@@ -24,7 +24,7 @@ const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
   .db-wrap {
-    max-width: 860px;
+    max-width: 480px;
     margin: 0 auto;
     font-family: 'Inter', system-ui, sans-serif;
     color: ${C.text};
@@ -34,8 +34,8 @@ const styles = `
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 36px;
-    padding-bottom: 24px;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
     border-bottom: 1px solid ${C.border};
   }
 
@@ -48,49 +48,39 @@ const styles = `
   }
 
   .db-back-btn {
-    background: transparent;
-    border: 1px solid ${C.border};
-    color: ${C.muted};
-    padding: 6px 14px;
-    border-radius: 6px;
+    background: none;
+    border: none;
     cursor: pointer;
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 0.72em;
+    color: ${C.muted};
+    font-size: 0.6em;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 500;
-    letter-spacing: 0.5px;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-  }
-  .db-back-btn:hover {
-    border-color: ${C.borderHover};
-    color: ${C.text};
-    background: rgba(139,0,0,0.04);
+    padding: 0;
   }
 
   .db-elapsed-card {
     background: ${C.card};
     border: 1px solid ${C.border};
-    border-radius: 10px;
-    padding: 28px 36px;
+    border-radius: 8px;
+    padding: 20px;
     box-shadow: 0 1px 6px rgba(139,0,0,0.06);
-    margin-bottom: 40px;
-    display: flex;
-    align-items: stretch;
-    gap: 0;
+    margin-bottom: 32px;
   }
 
   .db-elapsed-label {
-    font-size: 0.62em;
+    font-size: 0.58em;
     font-weight: 500;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: ${C.muted};
-    margin-bottom: 18px;
+    margin-bottom: 16px;
   }
 
   .db-elapsed-units {
     display: flex;
     gap: 0;
-    flex: 1;
   }
 
   .db-elapsed-unit {
@@ -98,32 +88,32 @@ const styles = `
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 6px;
     border-right: 1px solid ${C.border};
   }
   .db-elapsed-unit:first-child { padding-left: 0; }
-  .db-elapsed-unit:last-child { border-right: none; }
+  .db-elapsed-unit:last-child { border-right: none; padding-right: 0; }
 
   .db-elapsed-num {
-    font-size: 3.6em;
+    font-size: 2.4em;
     font-weight: 800;
     line-height: 1;
-    letter-spacing: -2px;
+    letter-spacing: -1px;
     color: ${C.text};
     font-variant-numeric: tabular-nums;
   }
 
   .db-elapsed-unit-label {
-    font-size: 0.58em;
+    font-size: 0.52em;
     font-weight: 500;
-    letter-spacing: 2.5px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: ${C.muted};
-    margin-top: 10px;
+    margin-top: 8px;
   }
 
   .db-section-heading {
-    font-size: 0.62em;
+    font-size: 0.58em;
     font-weight: 600;
     letter-spacing: 3px;
     text-transform: uppercase;
@@ -142,24 +132,23 @@ const styles = `
 
   .db-tracker-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
   }
 
   .db-tracker-card {
     background: ${C.card};
     border: 1px solid ${C.border};
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 0;
     overflow: hidden;
     box-shadow: 0 1px 6px rgba(139,0,0,0.06);
-    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s;
     cursor: default;
   }
   .db-tracker-card:hover {
     border-color: ${C.borderHover};
     box-shadow: 0 4px 16px rgba(139,0,0,0.1);
-    transform: translateY(-2px);
   }
 
   .db-tracker-top {
@@ -167,44 +156,44 @@ const styles = `
   }
 
   .db-tracker-body {
-    padding: 22px 24px 24px;
+    padding: 16px 18px 18px;
   }
 
   .db-tracker-label {
-    font-size: 0.6em;
+    font-size: 0.58em;
     font-weight: 600;
     letter-spacing: 2.5px;
     text-transform: uppercase;
-    margin-bottom: 18px;
+    margin-bottom: 14px;
   }
 
   .db-big-num {
-    font-size: 3em;
+    font-size: 2.4em;
     font-weight: 800;
     line-height: 1;
-    letter-spacing: -1.5px;
+    letter-spacing: -1px;
     color: ${C.text};
     font-variant-numeric: tabular-nums;
   }
 
   .db-unit {
-    font-size: 0.65em;
+    font-size: 0.62em;
     font-weight: 400;
     color: ${C.muted};
-    margin-top: 8px;
+    margin-top: 6px;
     letter-spacing: 0.3px;
   }
 
   .db-wdl-row {
     display: flex;
-    gap: 20px;
-    margin-bottom: 18px;
+    gap: 14px;
+    margin-bottom: 14px;
   }
 
   .db-wdl-block {}
 
   .db-wdl-num {
-    font-size: 2.4em;
+    font-size: 2em;
     font-weight: 800;
     line-height: 1;
     letter-spacing: -1px;
@@ -212,17 +201,17 @@ const styles = `
   }
 
   .db-wdl-label {
-    font-size: 0.58em;
+    font-size: 0.55em;
     font-weight: 500;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: ${C.muted};
-    margin-top: 5px;
+    margin-top: 4px;
   }
 
   .db-proportion-bar {
     display: flex;
-    height: 5px;
+    height: 4px;
     border-radius: 3px;
     overflow: hidden;
     gap: 2px;
@@ -243,10 +232,9 @@ const styles = `
     padding: 100px 0;
   }
 
-  @media (max-width: 680px) {
-    .db-tracker-grid { grid-template-columns: 1fr 1fr; }
-    .db-elapsed-num { font-size: 2.4em; }
-    .db-big-num { font-size: 2.4em; }
+  @media (max-width: 380px) {
+    .db-elapsed-num { font-size: 1.9em; }
+    .db-elapsed-unit { padding: 0 3px; }
   }
 `
 
@@ -336,7 +324,7 @@ export default function Dashboard({ onBack }) {
 
         <div className="db-header">
           <span className="db-title">Dashboard</span>
-          <button className="db-back-btn" onClick={onBack}>← Home</button>
+          <button className="db-back-btn" onClick={onBack}>← home</button>
         </div>
 
         {loading ? (
