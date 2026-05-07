@@ -432,19 +432,6 @@ function OpponentResultBars({ games }) {
 
   return (
     <div>
-      {/* Legend */}
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid rgba(239,1,7,0.07)' }}>
-        <div style={{ width: '130px', flexShrink: 0 }} />
-        <div style={{ flex: 1, display: 'flex', gap: '14px' }}>
-          {[['Win', '#1a5c38'], ['Draw', '#d97706'], ['Loss', '#EF0107']].map(([label, color]) => (
-            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: color, flexShrink: 0 }} />
-              <span style={{ fontSize: '0.52em', fontFamily: 'Montserrat', color: 'rgba(26,0,0,0.4)', letterSpacing: '1px', textTransform: 'uppercase' }}>{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {comps.map((comp, ci) => {
         const opponents = Object.values(byComp[comp])
           .map(e => ({ ...e, total: e.W + e.D + e.L }))
