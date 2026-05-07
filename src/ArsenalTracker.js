@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
+import { useEntriesLock, EntriesLockPrompt, LockIcon } from './useEntriesLock'
 
 const A = {
   red: '#EF0107',
@@ -144,6 +145,139 @@ const arsenalStyles = `
   .ar-toggle-btn:last-child { border-radius: 0 2px 2px 0; }
 `
 
+
+function CLJourney({ games }) {
+  const STAGES = [
+    { key: 'Round of 16', abbr: 'R16' },
+    { key: 'Quarter Final', abbr: 'QF' },
+    { key: 'Semi Final', abbr: 'SF' },
+  ]
+
+  const byStage = {}
+  games.forEach(g => {
+    if (!g.competition?.startsWith('Champions League ·')) return
+    const stageKey = g.competition.split(' · ')[1]
+    if (!STAGES.find(s => s.key === stageKey)) return
+    if (!byStage[stageKey]) byStage[stageKey] = []
+    byStage[stageKey].push(g)
+  })
+
+  if (Object.keys(byStage).length === 0) return null
+
+  const allCLGames = Object.values(byStage).flat().sort((a, b) => a.date.localeCompare(b.date))
+  const firstDate = allCLGames[0]?.date
+  let seasonLabel = ''
+  if (firstDate) {
+    const year = parseInt(firstDate.split('-')[0])
+    const month = parseInt(firstDate.split('-')[1])
+    const seasonStart = month < 7 ? year - 1 : year
+    seasonLabel = `${seasonStart} / ${String(seasonStart + 1).slice(-2)}`
+  }
+
+  return (
+    <div style={{
+      background: 'white',
+      border: '1px solid rgba(239,1,7,0.08)',
+      borderRadius: '4px',
+      padding: '24px',
+      marginBottom: '20px',
+      boxShadow: '0 2px 12px rgba(239,1,7,0.05)',
+    }}>
+      {/* Header */}
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '4px' }}>
+          Champions League
+        </div>
+        {seasonLabel && (
+          <div style={{ fontSize: '0.52em', letterSpacing: '2px', color: A.textFaint, fontFamily: 'Montserrat', textTransform: 'uppercase' }}>
+            {seasonLabel} Season
+          </div>
+        )}
+      </div>
+
+      {/* Stage path */}
+      <div style={{ display: 'flex' }}>
+        {STAGES.map((stage, i) => {
+          const gamesHere = (byStage[stage.key] || []).sort((a, b) => a.date.localeCompare(b.date))
+          const attended = gamesHere.length > 0
+          const isFirst = i === 0
+          const isLast = i === STAGES.length - 1
+          const prevAttended = i > 0 && (byStage[STAGES[i - 1].key] || []).length > 0
+          const nextAttended = !isLast && (byStage[STAGES[i + 1].key] || []).length > 0
+          const opponent = gamesHere[0]?.opponent
+
+          const leftLineColor = isFirst ? 'transparent'
+            : prevAttended && attended ? 'rgba(239,1,7,0.4)' : 'rgba(26,0,0,0.08)'
+          const rightLineColor = isLast ? 'transparent'
+            : attended && nextAttended ? 'rgba(239,1,7,0.4)' : 'rgba(26,0,0,0.08)'
+
+          return (
+            <div key={stage.key} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              {/* Connector + node */}
+              <div style={{ width: '100%', display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                <div style={{ flex: 1, height: '1px', background: leftLineColor }} />
+                <div style={{
+                  width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+                  background: attended ? '#EF0107' : 'transparent',
+                  border: `1.5px solid ${attended ? '#EF0107' : 'rgba(255,255,255,0.12)'}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: attended ? '0 0 18px rgba(239,1,7,0.4)' : 'none',
+                }}>
+                  {attended && (
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M2.5 6.5 L5.5 9.5 L10.5 3.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+                <div style={{ flex: 1, height: '1px', background: rightLineColor }} />
+              </div>
+
+              {/* Stage label */}
+              <div style={{
+                fontSize: '0.5em', fontFamily: 'Montserrat', fontWeight: 700,
+                letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '7px',
+                color: attended ? A.red : A.textFaint,
+              }}>
+                {stage.abbr}
+              </div>
+
+              {/* Opponent */}
+              {attended && opponent && (
+                <div style={{
+                  fontSize: '0.46em', fontFamily: 'Montserrat', letterSpacing: '0.3px',
+                  color: A.textMuted, textAlign: 'center',
+                  lineHeight: 1.35, maxWidth: '64px', wordBreak: 'break-word',
+                  marginBottom: '5px',
+                }}>
+                  {opponent}
+                </div>
+              )}
+
+              {/* Per-leg results */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                {gamesHere.map((g, gi) => (
+                  <div key={gi} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{
+                      fontSize: '0.44em', fontFamily: 'Montserrat', fontWeight: 700,
+                      letterSpacing: '1px', color: resultColor[g.result],
+                    }}>
+                      {g.result}
+                    </span>
+                    {g.score && (
+                      <span style={{ fontSize: '0.42em', fontFamily: 'Montserrat', color: A.textFaint }}>
+                        {g.score}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 function ResultDonut({ games }) {
   const [tooltip, setTooltip] = useState(null)
@@ -329,6 +463,7 @@ export default function ArsenalTracker({ onBack }) {
   const [games, setGames] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [logsOpen, setLogsOpen] = useState(false)
+  const lock = useEntriesLock()
   const [editDate, setEditDate] = useState('')
   const [editOpponent, setEditOpponent] = useState('')
   const [editCompetition, setEditCompetition] = useState('')
@@ -571,6 +706,9 @@ export default function ArsenalTracker({ onBack }) {
                   <ResultDonut games={games} />
                 </div>
 
+                {/* CL journey */}
+                <CLJourney games={games} />
+
                 {/* Opponents lollipop chart */}
                 <div style={{ background: 'white', border: '1px solid rgba(239,1,7,0.08)', borderRadius: '4px', padding: '24px', marginBottom: '28px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
                   <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Opponents</div>
@@ -585,10 +723,11 @@ export default function ArsenalTracker({ onBack }) {
               <p style={{ color: A.textFaint, fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No games recorded yet.</p>
             ) : (
               <>
-                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(239,1,7,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
-                  <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries</span>
+                <button onClick={() => lock.guard(() => setLogsOpen(o => !o))} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(239,1,7,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
+                  <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: A.redMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries{!lock.unlocked && <LockIcon />}</span>
                   <span style={{ fontSize: '0.8em', color: A.redMuted, fontFamily: 'Montserrat', transition: 'transform 0.2s', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</span>
                 </button>
+                {lock.showPrompt && <EntriesLockPrompt lock={lock} accent="rgba(239,1,7,0.35)" />}
                 {logsOpen && <div style={{ position: 'relative', paddingLeft: '28px' }}>
                 <div style={{ position: 'absolute', left: '7px', top: '8px', bottom: '8px', width: '1px', background: `linear-gradient(to bottom, ${A.red}, rgba(239,1,7,0.1))` }} />
                 {games.map((game, i) => (

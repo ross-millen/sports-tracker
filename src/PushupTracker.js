@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
+import { useEntriesLock, EntriesLockPrompt, LockIcon } from './useEntriesLock'
 
 const P = {
   blue: '#1e3a8a',
@@ -290,6 +291,7 @@ export default function PushupTracker({ onBack }) {
   const [sessions, setSessions] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [logsOpen, setLogsOpen] = useState(false)
+  const lock = useEntriesLock()
   const [editDate, setEditDate] = useState('')
   const [editTarget, setEditTarget] = useState('')
   const [editCount, setEditCount] = useState('')
@@ -531,10 +533,11 @@ export default function PushupTracker({ onBack }) {
               <p style={{ color: P.textFaint, fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
             ) : (
               <>
-                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(30,58,138,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(30,58,138,0.05)' }}>
-                  <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries</span>
+                <button onClick={() => lock.guard(() => setLogsOpen(o => !o))} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(30,58,138,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(30,58,138,0.05)' }}>
+                  <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries{!lock.unlocked && <LockIcon />}</span>
                   <span style={{ fontSize: '0.8em', color: P.blueMuted, fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
                 </button>
+                {lock.showPrompt && <EntriesLockPrompt lock={lock} accent="rgba(30,58,138,0.4)" />}
                 {logsOpen && <div style={{ position: 'relative', paddingLeft: '28px' }}>
                 <div style={{
                   position: 'absolute', left: '7px', top: '8px', bottom: '8px',

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
+import { useEntriesLock, EntriesLockPrompt, LockIcon } from './useEntriesLock'
 
 const T = {
   orange: '#92400e',
@@ -235,6 +236,7 @@ export default function TakeawayLog({ onBack }) {
   const [editPrice, setEditPrice] = useState('')
   const [editDeliveryApp, setEditDeliveryApp] = useState('')
   const [logsOpen, setLogsOpen] = useState(false)
+  const lock = useEntriesLock()
 
   const DELIVERY_APPS = ['Deliveroo', 'Uber Eats', 'Just Eat']
 
@@ -488,10 +490,11 @@ export default function TakeawayLog({ onBack }) {
                 )}
 
                 {/* Entries */}
-                <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(146,64,14,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(146,64,14,0.05)' }}>
-                  <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: T.orangeMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries</span>
+                <button onClick={() => lock.guard(() => setLogsOpen(o => !o))} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'white', border: '1px solid rgba(146,64,14,0.15)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(146,64,14,0.05)' }}>
+                  <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: T.orangeMuted, textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries{!lock.unlocked && <LockIcon />}</span>
                   <span style={{ fontSize: '0.8em', color: T.orangeMuted, fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
                 </button>
+                {lock.showPrompt && <EntriesLockPrompt lock={lock} accent="rgba(146,64,14,0.4)" />}
 
                 {logsOpen && (
                   <div style={{ position: 'relative', paddingLeft: '28px' }}>

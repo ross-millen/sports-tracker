@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
+import { useEntriesLock, EntriesLockPrompt, LockIcon } from './useEntriesLock'
 
 const G = {
   bg: '#0d0c0b',
@@ -90,72 +91,54 @@ function GuinnessLineChart({ sessions, formatUKDate }) {
   )
 }
 
-const BUBBLE_COLORS = [
-  '#c9a452', '#8faa5a', '#4a90a4', '#c4756b',
-  '#7b68b0', '#d4956a', '#6aab7a', '#c9607a',
-]
-
-function GoldBubbleChart({ data }) {
-  const [tooltip, setTooltip] = useState(null)
+function LocationLeaderboard({ data }) {
   const entries = Object.values(data).sort((a, b) => b.pints - a.pints)
-  const maxPints = entries.length > 0 ? entries[0].pints : 1
-  const sizes = entries.map(e => Math.round(80 + Math.sqrt(e.pints / maxPints) * 35))
+  const maxPints = entries[0]?.pints || 1
 
   if (entries.length === 0) return null
 
   return (
-    <div style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center', alignItems: 'center' }}>
-        {entries.map((e, i) => {
-          const d = sizes[i]
-          const fontSize = Math.max(9, Math.floor(d * 0.11))
-          return (
-            <div
-              key={e.label}
-              style={{
-                width: `${d}px`, height: `${d}px`,
-                borderRadius: '50%',
-                background: BUBBLE_COLORS[i % BUBBLE_COLORS.length],
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                opacity: 0.9, flexShrink: 0,
-                boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
-                cursor: 'default', userSelect: 'none',
-              }}
-              onMouseMove={ev => setTooltip({ x: ev.clientX, y: ev.clientY, e })}
-              onMouseLeave={() => setTooltip(null)}
-            >
-              <div style={{
-                fontSize: `${fontSize}px`,
-                color: G.bg, fontFamily: 'Montserrat', fontWeight: 700,
-                letterSpacing: '0.5px', textAlign: 'center', lineHeight: 1.25,
-                maxWidth: `${Math.floor(d * 0.78)}px`, overflowWrap: 'break-word',
-              }}>
-                {e.label}
+    <div>
+      {entries.map((e, i) => {
+        const pct = (e.pints / maxPints) * 100
+        const avg = (e.pints / e.sessions).toFixed(1)
+        return (
+          <div key={e.label} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: i < entries.length - 1 ? '16px' : 0 }}>
+            <div style={{
+              width: '18px', flexShrink: 0, textAlign: 'right',
+              fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 700,
+              color: i === 0 ? G.gold : i === 1 ? 'rgba(201,164,82,0.5)' : 'rgba(201,164,82,0.25)',
+              letterSpacing: '1px',
+            }}>
+              {i + 1}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                <span style={{
+                  fontSize: '0.72em', fontFamily: 'Montserrat', color: G.cream,
+                  fontWeight: 500, letterSpacing: '0.5px',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  maxWidth: '60%',
+                }}>
+                  {e.label}
+                </span>
+                <span style={{ fontSize: '0.58em', fontFamily: 'Montserrat', color: G.goldMuted, letterSpacing: '1px', flexShrink: 0 }}>
+                  {e.pints}p · {e.sessions} visit{e.sessions !== 1 ? 's' : ''} · {avg} avg
+                </span>
               </div>
-              <div style={{
-                fontSize: `${Math.max(7, Math.floor(fontSize * 0.85))}px`,
-                color: 'rgba(13,12,11,0.65)', fontFamily: 'Montserrat',
-                fontWeight: 600, letterSpacing: '0.5px', marginTop: '2px',
-              }}>
-                {e.pints}p
+              <div style={{ height: '2px', background: 'rgba(201,164,82,0.1)', borderRadius: '1px' }}>
+                <div style={{
+                  height: '100%', width: `${pct}%`,
+                  background: i === 0
+                    ? `linear-gradient(90deg, ${G.gold}, #e8c060)`
+                    : `rgba(201,164,82,${0.45 - i * 0.06})`,
+                  borderRadius: '1px',
+                }} />
               </div>
             </div>
-          )
-        })}
-      </div>
-      {tooltip && (
-        <div style={{
-          position: 'fixed', left: tooltip.x + 12, top: tooltip.y - 40,
-          background: G.bg, color: G.cream, padding: '8px 12px',
-          borderRadius: '3px', fontSize: '0.7em', fontFamily: 'Montserrat',
-          letterSpacing: '1px', pointerEvents: 'none', zIndex: 1000,
-          whiteSpace: 'nowrap', boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-          border: `1px solid ${G.goldFaint}`,
-        }}>
-          {tooltip.e.label} — {tooltip.e.pints} pint{tooltip.e.pints !== 1 ? 's' : ''} · {tooltip.e.sessions} session{tooltip.e.sessions !== 1 ? 's' : ''}
-        </div>
-      )}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -273,6 +256,7 @@ export default function GuinnessLog({ onBack }) {
   const [sessions, setSessions] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [logsOpen, setLogsOpen] = useState(false)
+  const lock = useEntriesLock()
   const [editDate, setEditDate] = useState('')
   const [editCount, setEditCount] = useState('')
   const [editLocation, setEditLocation] = useState('')
@@ -491,7 +475,7 @@ export default function GuinnessLog({ onBack }) {
                   <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: G.goldMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>
                     Locations
                   </div>
-                  <GoldBubbleChart data={locationData} />
+                  <LocationLeaderboard data={locationData} />
                 </div>
               )}
 
@@ -499,10 +483,11 @@ export default function GuinnessLog({ onBack }) {
                 <p style={{ color: 'rgba(245,236,215,0.2)', fontSize: '0.75em', letterSpacing: '2px', textTransform: 'uppercase' }}>No sessions recorded yet.</p>
               ) : (
                 <>
-                  <button onClick={() => setLogsOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'rgba(201,164,82,0.08)', border: '1px solid rgba(201,164,82,0.2)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }}>
-                    <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: 'rgba(201,164,82,0.9)', textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries</span>
+                  <button onClick={() => lock.guard(() => setLogsOpen(o => !o))} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'rgba(201,164,82,0.08)', border: '1px solid rgba(201,164,82,0.2)', borderRadius: '4px', cursor: 'pointer', padding: '16px 20px', marginBottom: '16px', boxShadow: '0 2px 12px rgba(0,0,0,0.15)' }}>
+                    <span style={{ fontSize: '0.62em', letterSpacing: '4px', color: 'rgba(201,164,82,0.9)', textTransform: 'uppercase', fontWeight: 600, fontFamily: 'Montserrat' }}>Entries{!lock.unlocked && <LockIcon />}</span>
                     <span style={{ fontSize: '0.8em', color: 'rgba(201,164,82,0.9)', fontFamily: 'Montserrat', display: 'inline-block', transform: logsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▾</span>
                   </button>
+                  {lock.showPrompt && <EntriesLockPrompt lock={lock} accent="rgba(201,164,82,0.45)" dark />}
                   {logsOpen && <div style={{ position: 'relative', paddingLeft: '28px' }}>
                   <div style={{
                     position: 'absolute', left: '7px', top: '8px', bottom: '8px',
