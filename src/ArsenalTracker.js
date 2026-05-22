@@ -598,6 +598,13 @@ export default function ArsenalTracker({ onBack }) {
     return sum + (isNaN(arsenalGoals) ? 0 : arsenalGoals)
   }, 0)
 
+  const goalsConceded = games.reduce((sum, g) => {
+    if (!g.score) return sum
+    const parts = g.score.split('-')
+    const against = parseInt(parts[1])
+    return sum + (isNaN(against) ? 0 : against)
+  }, 0)
+
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: A.textMuted,
     textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat',
@@ -736,7 +743,7 @@ export default function ArsenalTracker({ onBack }) {
                     { label: 'Games Seen', value: totalGames },
                     { label: 'Win Rate', value: `${winPct}%` },
                     { label: 'Unbeaten Run', value: unbeatenRun },
-                    { label: 'Arsenal Goals', value: goalsSeen || '—' },
+                    { label: 'Goals F – A', value: goalsSeen || goalsConceded ? `${goalsSeen} – ${goalsConceded}` : '—' },
                   ].map(kpi => (
                     <div key={kpi.label} style={{ padding: '16px 12px', background: 'white', border: '1px solid rgba(239,1,7,0.1)', borderRadius: '4px', textAlign: 'center', boxShadow: '0 2px 12px rgba(239,1,7,0.05)' }}>
                       <div style={{ fontSize: '0.5em', letterSpacing: '2px', color: A.textFaint, textTransform: 'uppercase', marginBottom: '8px', fontWeight: 500, fontFamily: 'Montserrat' }}>{kpi.label}</div>
