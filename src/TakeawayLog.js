@@ -306,7 +306,7 @@ export default function TakeawayLog({ onBack }) {
   orders.forEach(o => {
     const raw = o.restaurant?.trim()
     if (!raw) return
-    const key = raw.toLowerCase().replace(/[''ʼ‛]/g, "'")
+    const key = raw.toLowerCase().replace(/['‘’ʼ‛]/g, "'")
     restaurantCounts[key] = (restaurantCounts[key] || 0) + 1
     if (!restaurantDisplay[key]) restaurantDisplay[key] = raw
   })
@@ -331,8 +331,10 @@ export default function TakeawayLog({ onBack }) {
 
   const isMcDonalds = /mc\s*donald/i.test(restaurant)
 
-  const normaliseRestaurant = (name) =>
-    /mc\s*donald/i.test(name) ? "Mc Donald's" : name
+  const normaliseRestaurant = (name) => {
+    const norm = name.replace(/[‘’ʼ‛]/g, "'")
+    return /mc\s*donald/i.test(norm) ? "Mc Donald's" : norm
+  }
 
   const labelStyle = {
     fontSize: '0.58em', letterSpacing: '3px', color: T.textMuted,
