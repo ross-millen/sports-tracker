@@ -428,12 +428,12 @@ export default function Dashboard({ onBack }) {
                 </div>
                 <div className="db-stat-divider" />
                 <div className="db-stat-pair-item">
-                  <div className="db-big-num">{stats.guAvgDaily.toFixed(1)}</div>
+                  <div className="db-big-num">{(stats.guAvgDaily ?? 0).toFixed(1)}</div>
                   <div className="db-unit">avg / day</div>
                 </div>
                 <div className="db-stat-divider" />
                 <div className="db-stat-pair-item">
-                  <div className="db-big-num">{stats.guAvgSesh.toFixed(1)}</div>
+                  <div className="db-big-num">{(stats.guAvgSesh ?? 0).toFixed(1)}</div>
                   <div className="db-unit">avg / session</div>
                 </div>
               </div>
