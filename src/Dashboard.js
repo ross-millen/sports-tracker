@@ -310,7 +310,9 @@ export default function Dashboard({ onBack }) {
       const arWins  = ar.filter(g => g.result === 'W').length
       const arDraws = ar.filter(g => g.result === 'D').length
       const arLoss  = ar.filter(g => g.result === 'L').length
-      const guPints = gu.reduce((s, r) => s + (r.count || 0), 0)
+      const guPints    = gu.reduce((s, r) => s + (r.count || 0), 0)
+      const guAvgDaily = guPints / elapsedDays
+      const guAvgSesh  = gu.length ? guPints / gu.length : 0
       const puTotal = pu.reduce((s, r) => s + (r.count || 0), 0)
       const ofIn    = of.filter(d => !d.wfh_approved && !d.annual_leave).length
       const taSpend = ta.reduce((s, r) => s + (r.price || 0), 0)
@@ -331,7 +333,7 @@ export default function Dashboard({ onBack }) {
       setStats({
         fbHours: Math.round(fbMins / 60 * 10) / 10,
         arWins, arDraws, arLoss, arTotal: ar.length,
-        guPints,
+        guPints, guAvgDaily, guAvgSesh,
         puTotal, puPerDay, puTargets,
         ofIn,
         taSpend, taAvgDaily,
@@ -419,8 +421,22 @@ export default function Dashboard({ onBack }) {
             {/* Guinness */}
             <div className="db-section-heading">Guinness</div>
             <TrackerCard color={C.guinness} label="Guinness">
-              <div className="db-big-num">{stats.guPints}</div>
-              <div className="db-unit">pints</div>
+              <div className="db-stat-pair">
+                <div className="db-stat-pair-item">
+                  <div className="db-big-num">{stats.guPints}</div>
+                  <div className="db-unit">total pints</div>
+                </div>
+                <div className="db-stat-divider" />
+                <div className="db-stat-pair-item">
+                  <div className="db-big-num">{stats.guAvgDaily.toFixed(1)}</div>
+                  <div className="db-unit">avg / day</div>
+                </div>
+                <div className="db-stat-divider" />
+                <div className="db-stat-pair-item">
+                  <div className="db-big-num">{stats.guAvgSesh.toFixed(1)}</div>
+                  <div className="db-unit">avg / session</div>
+                </div>
+              </div>
             </TrackerCard>
 
             {/* Pushups */}
