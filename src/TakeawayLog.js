@@ -221,6 +221,58 @@ function TaDonutChart({ data }) {
   )
 }
 
+function RestaurantLeaderboard({ data }) {
+  const entries = Object.values(data).sort((a, b) => b.orders - a.orders)
+  const maxOrders = entries[0]?.orders || 1
+
+  if (entries.length === 0) return null
+
+  return (
+    <div>
+      {entries.map((e, i) => {
+        const pct = (e.orders / maxOrders) * 100
+        const avg = (e.spend / e.orders).toFixed(2)
+        return (
+          <div key={e.label} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: i < entries.length - 1 ? '16px' : 0 }}>
+            <div style={{
+              width: '18px', flexShrink: 0, textAlign: 'right',
+              fontSize: '0.55em', fontFamily: 'Montserrat', fontWeight: 700,
+              color: i === 0 ? T.orange : i === 1 ? T.orangeMuted : T.textFaint,
+              letterSpacing: '1px',
+            }}>
+              {i + 1}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
+                <span style={{
+                  fontSize: '0.72em', fontFamily: 'Montserrat', color: T.text,
+                  fontWeight: 500, letterSpacing: '0.5px',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  maxWidth: '55%',
+                }}>
+                  {e.label}
+                </span>
+                <span style={{ fontSize: '0.55em', fontFamily: 'Montserrat', color: T.textMuted, letterSpacing: '0.5px', flexShrink: 0 }}>
+                  {e.orders} order{e.orders !== 1 ? 's' : ''} · £{e.spend.toFixed(2)} · £{avg} avg
+                </span>
+              </div>
+              <div style={{ height: '2px', background: 'rgba(146,64,14,0.08)', borderRadius: '1px' }}>
+                <div style={{
+                  height: '100%', width: `${pct}%`,
+                  background: i === 0
+                    ? `linear-gradient(90deg, ${T.orange}, #d97706)`
+                    : `rgba(146,64,14,${Math.max(0.45 - i * 0.06, 0.1)})`,
+                  borderRadius: '1px',
+                }} />
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function TakeawayLog({ onBack }) {
   const [page, setPage] = useState('log')
   const [date, setDate] = useState('')
@@ -301,18 +353,20 @@ export default function TakeawayLog({ onBack }) {
   const totalSpend = orders.reduce((s, o) => s + (parseFloat(o.price) || 0), 0)
   const avgOrder = totalOrders ? totalSpend / totalOrders : 0
 
-  const restaurantCounts = {}
-  const restaurantDisplay = {}
+  const restaurantData = {}
   orders.forEach(o => {
     const raw = o.restaurant?.trim()
     if (!raw) return
-    const key = raw.toLowerCase().replace(/['‘’ʼ‛]/g, "'")
-    restaurantCounts[key] = (restaurantCounts[key] || 0) + 1
-    if (!restaurantDisplay[key]) restaurantDisplay[key] = raw
+    const norm = raw.toLowerCase().replace(/[‘’’ʼ‛]/g, "’")
+    const key = o.is_breakfast ? norm + '_breakfast' : norm
+    const displayName = o.is_breakfast ? `${raw} Breakfast` : raw
+    if (!restaurantData[key]) restaurantData[key] = { label: displayName, orders: 0, spend: 0 }
+    restaurantData[key].orders++
+    restaurantData[key].spend += parseFloat(o.price) || 0
   })
-  const rankedRestaurantsRaw = Object.entries(restaurantCounts)
-    .sort((a, b) => b[1] - a[1])
-    .map(([key, count]) => [restaurantDisplay[key], count])
+  const rankedRestaurants = Object.values(restaurantData)
+    .sort((a, b) => b.orders - a.orders)
+    .map(r => [r.label, r.orders])
   const deliveryAppData = {}
   orders.forEach(o => {
     if (o.delivery_app) {
@@ -321,7 +375,6 @@ export default function TakeawayLog({ onBack }) {
     }
   })
 
-  const rankedRestaurants = rankedRestaurantsRaw
   const highestOrder = orders.length ? Math.max(...orders.map(o => parseFloat(o.price) || 0)) : 0
   const podium = [rankedRestaurants[1], rankedRestaurants[0], rankedRestaurants[2]]
   const podiumHeights = [70, 100, 50]
@@ -480,6 +533,14 @@ export default function TakeawayLog({ onBack }) {
                         )
                       })}
                     </div>
+                  </div>
+                )}
+
+                {/* Restaurant leaderboard */}
+                {Object.keys(restaurantData).length > 0 && (
+                  <div style={{ background: 'white', border: '1px solid rgba(146,64,14,0.1)', borderRadius: '4px', padding: '20px', marginBottom: '28px', boxShadow: '0 2px 12px rgba(146,64,14,0.05)' }}>
+                    <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: T.orangeMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>Restaurants</div>
+                    <RestaurantLeaderboard data={restaurantData} />
                   </div>
                 )}
 
