@@ -20,6 +20,8 @@ const C = {
   loss:       '#991b1b',
 }
 
+const PUSHUP_COLORS = ['#1e3a8a', '#2e8b57', '#7b68b0', '#c4756b', '#d4956a', '#4a90a4']
+
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -113,12 +115,6 @@ const styles = `
     background: ${C.border};
   }
 
-  .db-tracker-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-
   .db-tracker-card {
     background: ${C.card};
     border: 1px solid ${C.border};
@@ -128,6 +124,7 @@ const styles = `
     box-shadow: 0 1px 6px rgba(139,0,0,0.06);
     transition: border-color 0.15s, box-shadow 0.15s;
     cursor: default;
+    margin-bottom: 28px;
   }
   .db-tracker-card:hover {
     border-color: ${C.borderHover};
@@ -167,10 +164,16 @@ const styles = `
     letter-spacing: 0.3px;
   }
 
+  .db-stat-pair {
+    display: flex;
+    gap: 32px;
+  }
+
   .db-wdl-row {
     display: flex;
     gap: 14px;
     margin-bottom: 14px;
+    flex-wrap: wrap;
   }
 
   .db-wdl-block {}
@@ -205,6 +208,12 @@ const styles = `
     transition: opacity 0.2s;
   }
   .db-proportion-seg:hover { opacity: 0.75; }
+
+  .db-divider {
+    height: 1px;
+    background: ${C.border};
+    margin: 16px 0;
+  }
 
   .db-loading {
     color: ${C.faint};
@@ -268,7 +277,7 @@ export default function Dashboard({ onBack }) {
         supabase.from('sessions').select('date,duration_mins'),
         supabase.from('arsenal_games').select('date,result'),
         supabase.from('guinness_sessions').select('date,count'),
-        supabase.from('pushup_sessions').select('date,count'),
+        supabase.from('pushup_sessions').select('date,count,target'),
         supabase.from('office_days').select('date,wfh_approved,annual_leave'),
         supabase.from('takeaways').select('date,price'),
       ])
@@ -280,6 +289,8 @@ export default function Dashboard({ onBack }) {
       const of = office || []
       const ta = takeaways || []
 
+      const elapsedDays = Math.max(1, (Date.now() - START) / 86400000)
+
       const fbMins  = fb.reduce((s, r) => s + (r.duration_mins || 0), 0)
       const arWins  = ar.filter(g => g.result === 'W').length
       const arDraws = ar.filter(g => g.result === 'D').length
@@ -289,11 +300,26 @@ export default function Dashboard({ onBack }) {
       const ofIn    = of.filter(d => !d.wfh_approved && !d.annual_leave).length
       const taSpend = ta.reduce((s, r) => s + (r.price || 0), 0)
 
+      const puPerDay = Math.round(puTotal / elapsedDays * 10) / 10
+
+      const puByTarget = {}
+      pu.forEach(s => {
+        const key = s.target ? s.target.trim() : 'Unspecified'
+        puByTarget[key] = (puByTarget[key] || 0) + (parseInt(s.count) || 0)
+      })
+      const puTargets = Object.entries(puByTarget)
+        .sort((a, b) => b[1] - a[1])
+        .map(([label, reps]) => ({ label, reps }))
+
+      const taAvgDaily = taSpend / elapsedDays
+
       setStats({
         fbHours: Math.round(fbMins / 60 * 10) / 10,
         arWins, arDraws, arLoss, arTotal: ar.length,
-        guPints, puTotal, ofIn,
-        taSpend,
+        guPints,
+        puTotal, puPerDay, puTargets,
+        ofIn,
+        taSpend, taAvgDaily,
       })
       setLoading(false)
     }
@@ -339,63 +365,104 @@ export default function Dashboard({ onBack }) {
               </div>
             </div>
 
-            <div className="db-section-heading">By tracker</div>
+            {/* Football */}
+            <div className="db-section-heading">Football</div>
+            <TrackerCard color={C.football} label="Football">
+              <div className="db-big-num">
+                {stats.fbHours}
+                <span style={{ fontSize: '0.38em', fontWeight: 600, color: C.muted, marginLeft: '3px' }}>h</span>
+              </div>
+              <div className="db-unit">total time played</div>
+            </TrackerCard>
 
-            <div className="db-tracker-grid">
-
-              <TrackerCard color={C.football} label="Football">
-                <div className="db-big-num">
-                  {stats.fbHours}
-                  <span style={{ fontSize: '0.38em', fontWeight: 600, color: C.muted, marginLeft: '3px' }}>h</span>
+            {/* Arsenal */}
+            <div className="db-section-heading">Arsenal</div>
+            <TrackerCard color={C.arsenal} label="Arsenal">
+              <div className="db-wdl-row">
+                <div className="db-wdl-block">
+                  <div className="db-wdl-num" style={{ color: C.win }}>{stats.arWins}</div>
+                  <div className="db-wdl-label">Wins</div>
                 </div>
-                <div className="db-unit">total time played</div>
-              </TrackerCard>
-
-              <TrackerCard color={C.arsenal} label="Arsenal">
-                <div className="db-wdl-row">
-                  <div className="db-wdl-block">
-                    <div className="db-wdl-num" style={{ color: C.win }}>{stats.arWins}</div>
-                    <div className="db-wdl-label">Wins</div>
-                  </div>
-                  <div className="db-wdl-block">
-                    <div className="db-wdl-num" style={{ color: C.draw }}>{stats.arDraws}</div>
-                    <div className="db-wdl-label">Draws</div>
-                  </div>
-                  <div className="db-wdl-block">
-                    <div className="db-wdl-num" style={{ color: C.loss }}>{stats.arLoss}</div>
-                    <div className="db-wdl-label">Losses</div>
-                  </div>
+                <div className="db-wdl-block">
+                  <div className="db-wdl-num" style={{ color: C.draw }}>{stats.arDraws}</div>
+                  <div className="db-wdl-label">Draws</div>
                 </div>
-                {stats.arTotal > 0 && (
+                <div className="db-wdl-block">
+                  <div className="db-wdl-num" style={{ color: C.loss }}>{stats.arLoss}</div>
+                  <div className="db-wdl-label">Losses</div>
+                </div>
+              </div>
+              {stats.arTotal > 0 && (
+                <div className="db-proportion-bar">
+                  {stats.arWins  > 0 && <div className="db-proportion-seg" style={{ flex: stats.arWins,  background: C.win  }} />}
+                  {stats.arDraws > 0 && <div className="db-proportion-seg" style={{ flex: stats.arDraws, background: C.draw }} />}
+                  {stats.arLoss  > 0 && <div className="db-proportion-seg" style={{ flex: stats.arLoss,  background: C.loss }} />}
+                </div>
+              )}
+            </TrackerCard>
+
+            {/* Guinness */}
+            <div className="db-section-heading">Guinness</div>
+            <TrackerCard color={C.guinness} label="Guinness">
+              <div className="db-big-num">{stats.guPints}</div>
+              <div className="db-unit">pints</div>
+            </TrackerCard>
+
+            {/* Pushups */}
+            <div className="db-section-heading">Pushups</div>
+            <TrackerCard color={C.pushups} label="Pushups">
+              <div className="db-stat-pair" style={{ marginBottom: stats.puTargets.length > 0 ? '0' : '0' }}>
+                <div>
+                  <div className="db-big-num">{stats.puTotal.toLocaleString()}</div>
+                  <div className="db-unit">total reps</div>
+                </div>
+                <div>
+                  <div className="db-big-num">{stats.puPerDay}</div>
+                  <div className="db-unit">reps / day</div>
+                </div>
+              </div>
+              {stats.puTargets.length > 0 && (
+                <>
+                  <div className="db-divider" />
+                  <div className="db-wdl-row">
+                    {stats.puTargets.map((t, i) => (
+                      <div key={t.label} className="db-wdl-block">
+                        <div className="db-wdl-num" style={{ color: PUSHUP_COLORS[i % PUSHUP_COLORS.length] }}>{t.reps.toLocaleString()}</div>
+                        <div className="db-wdl-label">{t.label}</div>
+                      </div>
+                    ))}
+                  </div>
                   <div className="db-proportion-bar">
-                    {stats.arWins  > 0 && <div className="db-proportion-seg" style={{ flex: stats.arWins,  background: C.win  }} />}
-                    {stats.arDraws > 0 && <div className="db-proportion-seg" style={{ flex: stats.arDraws, background: C.draw }} />}
-                    {stats.arLoss  > 0 && <div className="db-proportion-seg" style={{ flex: stats.arLoss,  background: C.loss }} />}
+                    {stats.puTargets.map((t, i) => (
+                      <div key={t.label} className="db-proportion-seg" style={{ flex: t.reps, background: PUSHUP_COLORS[i % PUSHUP_COLORS.length] }} />
+                    ))}
                   </div>
-                )}
-              </TrackerCard>
+                </>
+              )}
+            </TrackerCard>
 
-              <TrackerCard color={C.guinness} label="Guinness">
-                <div className="db-big-num">{stats.guPints}</div>
-                <div className="db-unit">pints</div>
-              </TrackerCard>
+            {/* Office */}
+            <div className="db-section-heading">Office</div>
+            <TrackerCard color={C.office} label="Office">
+              <div className="db-big-num">{stats.ofIn}</div>
+              <div className="db-unit">days in office</div>
+            </TrackerCard>
 
-              <TrackerCard color={C.pushups} label="Pushups">
-                <div className="db-big-num">{stats.puTotal.toLocaleString()}</div>
-                <div className="db-unit">total reps</div>
-              </TrackerCard>
+            {/* Takeaway */}
+            <div className="db-section-heading">Takeaway</div>
+            <TrackerCard color={C.takeaway} label="Takeaway">
+              <div className="db-stat-pair">
+                <div>
+                  <div className="db-big-num">£{stats.taSpend.toFixed(2)}</div>
+                  <div className="db-unit">total spent</div>
+                </div>
+                <div>
+                  <div className="db-big-num">£{stats.taAvgDaily.toFixed(2)}</div>
+                  <div className="db-unit">avg daily spend</div>
+                </div>
+              </div>
+            </TrackerCard>
 
-              <TrackerCard color={C.office} label="Office">
-                <div className="db-big-num">{stats.ofIn}</div>
-                <div className="db-unit">days in office</div>
-              </TrackerCard>
-
-              <TrackerCard color={C.takeaway} label="Takeaway">
-                <div className="db-big-num">£{stats.taSpend.toFixed(2)}</div>
-                <div className="db-unit">total spent</div>
-              </TrackerCard>
-
-            </div>
           </>
         )}
       </div>
