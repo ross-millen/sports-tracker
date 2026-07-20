@@ -137,6 +137,7 @@ const styles = `
 
   .db-tracker-body {
     padding: 16px 18px 18px;
+    text-align: center;
   }
 
   .db-tracker-label {
@@ -166,7 +167,20 @@ const styles = `
 
   .db-stat-pair {
     display: flex;
-    gap: 32px;
+    justify-content: center;
+    align-items: stretch;
+  }
+
+  .db-stat-pair-item {
+    padding: 0 28px;
+  }
+  .db-stat-pair-item:first-child { padding-left: 0; }
+  .db-stat-pair-item:last-child  { padding-right: 0; }
+
+  .db-stat-divider {
+    width: 1px;
+    background: ${C.border};
+    flex-shrink: 0;
   }
 
   .db-wdl-row {
@@ -174,6 +188,7 @@ const styles = `
     gap: 14px;
     margin-bottom: 14px;
     flex-wrap: wrap;
+    justify-content: center;
   }
 
   .db-wdl-block {}
@@ -411,12 +426,13 @@ export default function Dashboard({ onBack }) {
             {/* Pushups */}
             <div className="db-section-heading">Pushups</div>
             <TrackerCard color={C.pushups} label="Pushups">
-              <div className="db-stat-pair" style={{ marginBottom: stats.puTargets.length > 0 ? '0' : '0' }}>
-                <div>
+              <div className="db-stat-pair">
+                <div className="db-stat-pair-item">
                   <div className="db-big-num">{stats.puTotal.toLocaleString()}</div>
                   <div className="db-unit">total reps</div>
                 </div>
-                <div>
+                <div className="db-stat-divider" />
+                <div className="db-stat-pair-item">
                   <div className="db-big-num">{stats.puPerDay}</div>
                   <div className="db-unit">reps / day</div>
                 </div>
@@ -424,11 +440,11 @@ export default function Dashboard({ onBack }) {
               {stats.puTargets.length > 0 && (
                 <>
                   <div className="db-divider" />
-                  <div className="db-wdl-row">
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', justifyContent: 'center', marginBottom: '10px' }}>
                     {stats.puTargets.map((t, i) => (
-                      <div key={t.label} className="db-wdl-block">
-                        <div className="db-wdl-num" style={{ color: PUSHUP_COLORS[i % PUSHUP_COLORS.length] }}>{t.reps.toLocaleString()}</div>
-                        <div className="db-wdl-label">{t.label}</div>
+                      <div key={t.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: PUSHUP_COLORS[i % PUSHUP_COLORS.length], flexShrink: 0 }} />
+                        <span style={{ fontSize: '0.58em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '2px', color: C.muted, textTransform: 'uppercase' }}>{t.label}</span>
                       </div>
                     ))}
                   </div>
@@ -452,11 +468,12 @@ export default function Dashboard({ onBack }) {
             <div className="db-section-heading">Takeaway</div>
             <TrackerCard color={C.takeaway} label="Takeaway">
               <div className="db-stat-pair">
-                <div>
+                <div className="db-stat-pair-item">
                   <div className="db-big-num">£{stats.taSpend.toFixed(2)}</div>
                   <div className="db-unit">total spent</div>
                 </div>
-                <div>
+                <div className="db-stat-divider" />
+                <div className="db-stat-pair-item">
                   <div className="db-big-num">£{stats.taAvgDaily.toFixed(2)}</div>
                   <div className="db-unit">avg daily spend</div>
                 </div>
