@@ -83,9 +83,7 @@ function GuinnessLineChart({ sessions, formatUKDate }) {
         <path d={linePath} fill="none" stroke={G.gold} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
         {points.map((p, i) => (
           <g key={i}>
-            {p.value > 0 && (
-              <circle cx={x(i)} cy={y(p.value)} r="3.5" fill="#e8c060" stroke={G.cream} strokeWidth="1" />
-            )}
+            {p.value > 0 && <circle cx={x(i)} cy={y(p.value)} r="2" fill={G.gold} />}
             <circle
               cx={x(i)} cy={y(p.value)} r="6"
               fill="transparent"
