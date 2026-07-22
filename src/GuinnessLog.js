@@ -531,19 +531,6 @@ export default function GuinnessLog({ onBack }) {
                 </div>
               )}
 
-              {Object.keys(locationData).length > 0 && (
-                <div style={{
-                  background: G.surface, border: `1px solid rgba(201,164,82,0.1)`,
-                  borderRadius: '4px', padding: '24px', marginBottom: '28px',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
-                }}>
-                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: G.goldMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>
-                    Locations
-                  </div>
-                  <LocationLeaderboard data={locationData} />
-                </div>
-              )}
-
               {Object.keys(pintsByDate).length > 0 && (
                 <div style={{
                   background: G.surface, border: `1px solid rgba(201,164,82,0.1)`,
@@ -554,6 +541,19 @@ export default function GuinnessLog({ onBack }) {
                     Average by Day of Week
                   </div>
                   <DayOfWeekChart pintsByDate={pintsByDate} />
+                </div>
+              )}
+
+              {Object.keys(locationData).length > 0 && (
+                <div style={{
+                  background: G.surface, border: `1px solid rgba(201,164,82,0.1)`,
+                  borderRadius: '4px', padding: '24px', marginBottom: '28px',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+                }}>
+                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: G.goldMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>
+                    Locations
+                  </div>
+                  <LocationLeaderboard data={locationData} />
                 </div>
               )}
 
