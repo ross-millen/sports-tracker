@@ -143,6 +143,55 @@ function LocationLeaderboard({ data }) {
   )
 }
 
+function DayOfWeekChart({ pintsByDate }) {
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const dowOrder = [1, 2, 3, 4, 5, 6, 0]
+  const totals = {}
+  Object.entries(pintsByDate).forEach(([date, pints]) => {
+    const dow = new Date(`${date}T00:00:00`).getDay()
+    if (!totals[dow]) totals[dow] = { total: 0, days: 0 }
+    totals[dow].total += pints
+    totals[dow].days += 1
+  })
+  const rows = dowOrder.map((dow, i) => ({
+    label: dayNames[i],
+    avg: totals[dow] ? totals[dow].total / totals[dow].days : 0,
+    logged: totals[dow]?.days || 0,
+  }))
+  const maxAvg = Math.max(...rows.map(r => r.avg), 1)
+  const bestAvg = Math.max(...rows.map(r => r.avg))
+
+  if (rows.every(r => r.logged === 0)) return null
+
+  return (
+    <div>
+      {rows.map((r, i) => {
+        const pct = (r.avg / maxAvg) * 100
+        const isBest = r.avg === bestAvg && r.avg > 0
+        return (
+          <div key={r.label} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: i < rows.length - 1 ? '14px' : 0 }}>
+            <div style={{ width: '28px', flexShrink: 0, fontSize: '0.6em', fontFamily: 'Montserrat', fontWeight: 600, letterSpacing: '1px', color: isBest ? G.gold : G.creamMuted }}>
+              {r.label}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ height: '6px', background: 'rgba(201,164,82,0.08)', borderRadius: '3px' }}>
+                <div style={{
+                  height: '100%', width: `${pct}%`,
+                  background: isBest ? `linear-gradient(90deg, ${G.gold}, #e8c060)` : 'rgba(201,164,82,0.4)',
+                  borderRadius: '3px',
+                }} />
+              </div>
+            </div>
+            <div style={{ width: '38px', flexShrink: 0, textAlign: 'right', fontSize: '0.62em', fontFamily: 'Montserrat', fontWeight: 600, color: r.logged ? G.cream : 'rgba(245,236,215,0.15)' }}>
+              {r.logged ? r.avg.toFixed(1) : '–'}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 const guinnessStyles = `
   @keyframes guFadeUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -476,6 +525,19 @@ export default function GuinnessLog({ onBack }) {
                     Locations
                   </div>
                   <LocationLeaderboard data={locationData} />
+                </div>
+              )}
+
+              {Object.keys(pintsByDate).length > 0 && (
+                <div style={{
+                  background: G.surface, border: `1px solid rgba(201,164,82,0.1)`,
+                  borderRadius: '4px', padding: '24px', marginBottom: '28px',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
+                }}>
+                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: G.goldMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>
+                    Average by Day of Week
+                  </div>
+                  <DayOfWeekChart pintsByDate={pintsByDate} />
                 </div>
               )}
 
