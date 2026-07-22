@@ -143,28 +143,44 @@ function LocationLeaderboard({ data }) {
   )
 }
 
+const GU_TRACKING_START = new Date('2026-04-04T00:00:00')
+
 function DayOfWeekChart({ pintsByDate }) {
   const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   const dowOrder = [1, 2, 3, 4, 5, 6, 0]
-  const totals = {}
+
+  const totalsByDow = [0, 0, 0, 0, 0, 0, 0]
   Object.entries(pintsByDate).forEach(([date, pints]) => {
     const dow = new Date(`${date}T00:00:00`).getDay()
-    if (!totals[dow]) totals[dow] = { total: 0, days: 0 }
-    totals[dow].total += pints
-    totals[dow].days += 1
+    totalsByDow[dow] += pints
   })
+
+  // Count every occurrence of each weekday since tracking began, including
+  // ones with nothing logged, so this is a true per-week average.
+  const occurrencesByDow = [0, 0, 0, 0, 0, 0, 0]
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const cursor = new Date(GU_TRACKING_START)
+  while (cursor <= today) {
+    occurrencesByDow[cursor.getDay()]++
+    cursor.setDate(cursor.getDate() + 1)
+  }
+
   const rows = dowOrder.map((dow, i) => ({
     label: dayNames[i],
-    avg: totals[dow] ? totals[dow].total / totals[dow].days : 0,
-    logged: totals[dow]?.days || 0,
+    avg: occurrencesByDow[dow] ? totalsByDow[dow] / occurrencesByDow[dow] : 0,
+    weeks: occurrencesByDow[dow],
   }))
   const maxAvg = Math.max(...rows.map(r => r.avg), 1)
   const bestAvg = Math.max(...rows.map(r => r.avg))
 
-  if (rows.every(r => r.logged === 0)) return null
+  if (rows.every(r => r.weeks === 0)) return null
 
   return (
     <div>
+      <div style={{ fontSize: '0.55em', letterSpacing: '1px', color: 'rgba(245,236,215,0.3)', fontFamily: 'Montserrat', marginBottom: '18px' }}>
+        Per calendar day since tracking began — zero-pint days included
+      </div>
       {rows.map((r, i) => {
         const pct = (r.avg / maxAvg) * 100
         const isBest = r.avg === bestAvg && r.avg > 0
@@ -182,8 +198,8 @@ function DayOfWeekChart({ pintsByDate }) {
                 }} />
               </div>
             </div>
-            <div style={{ width: '38px', flexShrink: 0, textAlign: 'right', fontSize: '0.62em', fontFamily: 'Montserrat', fontWeight: 600, color: r.logged ? G.cream : 'rgba(245,236,215,0.15)' }}>
-              {r.logged ? r.avg.toFixed(1) : '–'}
+            <div style={{ width: '38px', flexShrink: 0, textAlign: 'right', fontSize: '0.62em', fontFamily: 'Montserrat', fontWeight: 600, color: r.weeks ? G.cream : 'rgba(245,236,215,0.15)' }}>
+              {r.weeks ? r.avg.toFixed(1) : '–'}
             </div>
           </div>
         )
