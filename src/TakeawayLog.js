@@ -357,7 +357,7 @@ export default function TakeawayLog({ onBack }) {
   orders.forEach(o => {
     const raw = o.restaurant?.trim()
     if (!raw) return
-    const norm = raw.toLowerCase().replace(/[‘’’ʼ‛]/g, "’")
+    const norm = raw.toLowerCase().replace(/[‘’ʼ‛]/g, "'")
     const key = o.is_breakfast ? norm + '_breakfast' : norm
     const displayName = o.is_breakfast ? `${raw} Breakfast` : raw
     if (!restaurantData[key]) restaurantData[key] = { label: displayName, orders: 0, spend: 0 }
