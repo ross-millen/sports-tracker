@@ -20,22 +20,40 @@ function GuinnessLineChart({ sessions, formatUKDate }) {
   for (const s of sessions) {
     byDay[s.date] = (byDay[s.date] || 0) + (parseInt(s.count) || 0)
   }
-  const points = Object.keys(byDay)
-    .sort()
-    .map(date => ({ date: formatUKDate(date), value: byDay[date] }))
+  const loggedDates = Object.keys(byDay).sort()
+  if (loggedDates.length < 1) return null
+
+  const pad2 = n => String(n).padStart(2, '0')
+  const toKey = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+
+  const cursor = new Date(`${loggedDates[0]}T00:00:00`)
+  const end = new Date()
+  end.setHours(0, 0, 0, 0)
+
+  const points = []
+  while (cursor <= end) {
+    const key = toKey(cursor)
+    points.push({ date: formatUKDate(key), value: byDay[key] || 0 })
+    cursor.setDate(cursor.getDate() + 1)
+  }
 
   if (points.length < 2) return null
 
-  const W = 400, H = 120, padX = 8, padY = 12
-  const maxVal = Math.max(...points.map(p => p.value))
-  const minVal = Math.min(...points.map(p => p.value))
-  const range = maxVal - minVal || 1
+  const W = 420, H = 130, padLeft = 26, padRight = 8, padTop = 10, padBottom = 10
+  const maxVal = Math.max(...points.map(p => p.value), 1)
 
-  const x = i => padX + (i / (points.length - 1)) * (W - padX * 2)
-  const y = v => padY + (1 - (v - minVal) / range) * (H - padY * 2)
+  const tickCount = 4
+  const rawStep = maxVal / tickCount
+  const tickStep = Math.max(1, Math.ceil(rawStep))
+  const ticks = []
+  for (let t = 0; t <= tickStep * tickCount; t += tickStep) ticks.push(t)
+  const axisMax = ticks[ticks.length - 1]
+
+  const x = i => padLeft + (i / (points.length - 1)) * (W - padLeft - padRight)
+  const y = v => padTop + (1 - v / axisMax) * (H - padTop - padBottom)
 
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(p.value)}`).join(' ')
-  const areaPath = `${linePath} L ${x(points.length - 1)} ${H} L ${x(0)} ${H} Z`
+  const areaPath = `${linePath} L ${x(points.length - 1)} ${y(0)} L ${x(0)} ${y(0)} Z`
 
   return (
     <div style={{ position: 'relative' }}>
@@ -46,34 +64,35 @@ function GuinnessLineChart({ sessions, formatUKDate }) {
             <stop offset="100%" stopColor={G.gold} stopOpacity="0" />
           </linearGradient>
         </defs>
+        {ticks.map(t => (
+          <g key={t}>
+            <line
+              x1={padLeft} x2={W - padRight} y1={y(t)} y2={y(t)}
+              stroke="rgba(245,236,215,0.08)" strokeWidth="1"
+            />
+            <text
+              x={padLeft - 6} y={y(t)}
+              textAnchor="end" dominantBaseline="middle"
+              fill="rgba(245,236,215,0.35)" fontSize="8" fontFamily="Montserrat"
+            >
+              {t}
+            </text>
+          </g>
+        ))}
         <path d={areaPath} fill="url(#guGrad)" />
         <path d={linePath} fill="none" stroke={G.gold} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-        {points.map((p, i) => {
-          const cx = x(i), cy = y(p.value)
-          const labelY = cy - 8 < padY + 4 ? cy + 14 : cy - 8
-          return (
-            <g key={i}>
-              <circle
-                cx={cx} cy={cy} r="3"
-                fill={G.gold} stroke={G.surface} strokeWidth="1.5"
-                style={{ cursor: 'pointer' }}
-                onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, p })}
-                onMouseLeave={() => setTooltip(null)}
-              />
-              <text
-                x={cx} y={labelY}
-                textAnchor="middle"
-                fill={G.gold}
-                fontSize="8"
-                fontFamily="Montserrat"
-                fontWeight="600"
-                style={{ pointerEvents: 'none' }}
-              >
-                {p.value}
-              </text>
-            </g>
-          )
-        })}
+        {points.map((p, i) => (
+          <g key={i}>
+            {p.value > 0 && <circle cx={x(i)} cy={y(p.value)} r="2" fill={G.gold} />}
+            <circle
+              cx={x(i)} cy={y(p.value)} r="6"
+              fill="transparent"
+              style={{ cursor: 'pointer' }}
+              onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, p })}
+              onMouseLeave={() => setTooltip(null)}
+            />
+          </g>
+        ))}
       </svg>
       {tooltip && (
         <div style={{
@@ -518,7 +537,7 @@ export default function GuinnessLog({ onBack }) {
                 </div>
               )}
 
-              {sessions.length >= 2 && (
+              {sessions.length >= 1 && (
                 <div style={{
                   background: G.surface, border: `1px solid rgba(201,164,82,0.1)`,
                   borderRadius: '4px', padding: '24px', marginBottom: '28px',
