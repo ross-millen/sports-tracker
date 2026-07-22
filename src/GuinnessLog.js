@@ -20,22 +20,9 @@ function GuinnessLineChart({ sessions, formatUKDate }) {
   for (const s of sessions) {
     byDay[s.date] = (byDay[s.date] || 0) + (parseInt(s.count) || 0)
   }
-  const loggedDates = Object.keys(byDay).sort()
-  if (loggedDates.length < 1) return null
-
-  const pad2 = n => String(n).padStart(2, '0')
-  const toKey = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
-
-  const cursor = new Date(`${loggedDates[0]}T00:00:00`)
-  const end = new Date()
-  end.setHours(0, 0, 0, 0)
-
-  const points = []
-  while (cursor <= end) {
-    const key = toKey(cursor)
-    points.push({ date: formatUKDate(key), value: byDay[key] || 0 })
-    cursor.setDate(cursor.getDate() + 1)
-  }
+  const points = Object.keys(byDay)
+    .sort()
+    .map(date => ({ date: formatUKDate(date), value: byDay[date] }))
 
   if (points.length < 2) return null
 
@@ -82,16 +69,14 @@ function GuinnessLineChart({ sessions, formatUKDate }) {
         <path d={areaPath} fill="url(#guGrad)" />
         <path d={linePath} fill="none" stroke={G.gold} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
         {points.map((p, i) => (
-          <g key={i}>
-            {p.value > 0 && <circle cx={x(i)} cy={y(p.value)} r="2" fill={G.gold} />}
-            <circle
-              cx={x(i)} cy={y(p.value)} r="6"
-              fill="transparent"
-              style={{ cursor: 'pointer' }}
-              onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, p })}
-              onMouseLeave={() => setTooltip(null)}
-            />
-          </g>
+          <circle
+            key={i}
+            cx={x(i)} cy={y(p.value)} r="3"
+            fill={G.gold} stroke={G.surface} strokeWidth="1.5"
+            style={{ cursor: 'pointer' }}
+            onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, p })}
+            onMouseLeave={() => setTooltip(null)}
+          />
         ))}
       </svg>
       {tooltip && (
@@ -537,7 +522,7 @@ export default function GuinnessLog({ onBack }) {
                 </div>
               )}
 
-              {sessions.length >= 1 && (
+              {sessions.length >= 2 && (
                 <div style={{
                   background: G.surface, border: `1px solid rgba(201,164,82,0.1)`,
                   borderRadius: '4px', padding: '24px', marginBottom: '28px',
