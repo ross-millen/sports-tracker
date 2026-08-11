@@ -150,6 +150,103 @@ const BAR_COLORS = [
   '#5a6ebd', '#6aab7a', '#c4956a', '#8a6aad'
 ]
 
+function PushupLineChart({ sessions, formatUKDate }) {
+  const [tooltip, setTooltip] = useState(null)
+  const byDay = {}
+  for (const s of sessions) {
+    byDay[s.date] = (byDay[s.date] || 0) + (parseInt(s.count) || 0)
+  }
+  const loggedDates = Object.keys(byDay).sort()
+  if (loggedDates.length < 1) return null
+
+  const pad2 = n => String(n).padStart(2, '0')
+  const toKey = d => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+
+  const cursor = new Date(`${loggedDates[0]}T00:00:00`)
+  const end = new Date()
+  end.setHours(0, 0, 0, 0)
+
+  const points = []
+  while (cursor <= end) {
+    const key = toKey(cursor)
+    points.push({ date: formatUKDate(key), value: byDay[key] || 0 })
+    cursor.setDate(cursor.getDate() + 1)
+  }
+
+  if (points.length < 2) return null
+
+  const H = 130, padLeft = 30, padRight = 8, padTop = 10, padBottom = 10
+  const pointSpacing = 22
+  const minW = 420
+  const W = Math.max(minW, padLeft + padRight + (points.length - 1) * pointSpacing)
+  const maxVal = Math.max(...points.map(p => p.value), 1)
+
+  const ticks = [0, 100, 200, 300, 400, 500]
+  const axisMax = Math.max(ticks[ticks.length - 1], maxVal)
+
+  const x = i => padLeft + (i / (points.length - 1)) * (W - padLeft - padRight)
+  const y = v => padTop + (1 - v / axisMax) * (H - padTop - padBottom)
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i)} ${y(p.value)}`).join(' ')
+  const areaPath = `${linePath} L ${x(points.length - 1)} ${y(0)} L ${x(0)} ${y(0)} Z`
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: `${W}px`, maxWidth: 'none', height: 'auto', display: 'block', overflow: 'visible' }}>
+          <defs>
+            <linearGradient id="puGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={P.blue} stopOpacity="0.25" />
+              <stop offset="100%" stopColor={P.blue} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {ticks.map(t => {
+            const isTarget = t === 100
+            return (
+              <g key={t}>
+                <line
+                  x1={padLeft} x2={W - padRight} y1={y(t)} y2={y(t)}
+                  stroke={isTarget ? '#dc2626' : 'rgba(15,32,68,0.08)'}
+                  strokeWidth={isTarget ? '1.5' : '1'}
+                  strokeDasharray={isTarget ? '4 3' : undefined}
+                />
+                <text
+                  x={padLeft - 6} y={y(t)}
+                  textAnchor="end" dominantBaseline="middle"
+                  fill={isTarget ? '#dc2626' : 'rgba(15,32,68,0.35)'}
+                  fontSize="8" fontFamily="Montserrat"
+                  fontWeight={isTarget ? '700' : '400'}
+                >
+                  {t}
+                </text>
+              </g>
+            )
+          })}
+          <path d={areaPath} fill="url(#puGrad)" />
+          <path d={linePath} fill="none" stroke={P.blue} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+          {points.map((p, i) => (
+            <g key={i}>
+              {p.value > 0 && <circle cx={x(i)} cy={y(p.value)} r="2" fill={P.blue} />}
+              <circle
+                cx={x(i)} cy={y(p.value)} r="6"
+                fill="transparent"
+                style={{ cursor: 'pointer' }}
+                onMouseMove={e => setTooltip({ x: e.clientX, y: e.clientY, p })}
+                onMouseLeave={() => setTooltip(null)}
+              />
+            </g>
+          ))}
+        </svg>
+      </div>
+      {tooltip && (
+        <div className="pu-tooltip" style={{ left: tooltip.x + 12, top: tooltip.y - 40 }}>
+          {tooltip.p.date} — {tooltip.p.value} reps
+        </div>
+      )}
+    </div>
+  )
+}
+
 function PushupDonutChart({ entries, colorMap }) {
   const [tooltip, setTooltip] = useState(null)
   if (entries.length === 0) return (
@@ -511,6 +608,18 @@ export default function PushupTracker({ onBack }) {
                       {kpi.sub && <div style={{ fontSize: '0.5em', letterSpacing: '1px', color: P.textFaint, marginTop: '6px', fontFamily: 'Montserrat' }}>{kpi.sub}</div>}
                     </div>
                   ))}
+                </div>
+
+                {/* Reps over time */}
+                <div style={{
+                  background: 'white', border: '1px solid rgba(30,58,138,0.08)',
+                  borderRadius: '4px', padding: '24px', marginBottom: '28px',
+                  boxShadow: '0 2px 12px rgba(30,58,138,0.05)',
+                }}>
+                  <div style={{ fontSize: '0.58em', letterSpacing: '3px', color: P.blueMuted, textTransform: 'uppercase', fontWeight: 600, marginBottom: '20px' }}>
+                    Reps Over Time
+                  </div>
+                  <PushupLineChart sessions={sessions} formatUKDate={formatUKDate} />
                 </div>
 
                 {/* Count chart */}
