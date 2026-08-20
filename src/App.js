@@ -219,7 +219,6 @@ function App() {
             {/* Tracker buttons */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
               {[
-                { label: 'Football', key: 'football' },
                 { label: 'Arsenal', key: 'arsenal' },
                 { label: 'Guinness', key: 'guinness' },
                 { label: 'Pushups', key: 'pushups' },

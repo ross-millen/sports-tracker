@@ -382,16 +382,6 @@ export default function Dashboard({ onBack }) {
               </div>
             </div>
 
-            {/* Football */}
-            <div className="db-section-heading">Football</div>
-            <TrackerCard color={C.football} label="Football">
-              <div className="db-big-num">
-                {stats.fbHours}
-                <span style={{ fontSize: '0.38em', fontWeight: 600, color: C.muted, marginLeft: '3px' }}>h</span>
-              </div>
-              <div className="db-unit">total time played</div>
-            </TrackerCard>
-
             {/* Arsenal */}
             <div className="db-section-heading">Arsenal</div>
             <TrackerCard color={C.arsenal} label="Arsenal">
