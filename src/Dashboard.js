@@ -463,29 +463,6 @@ export default function Dashboard({ onBack }) {
               )}
             </TrackerCard>
 
-            {/* Office */}
-            <div className="db-section-heading">Office</div>
-            <TrackerCard color={C.office} label="Office">
-              <div className="db-big-num">{stats.ofIn}</div>
-              <div className="db-unit">days in office</div>
-            </TrackerCard>
-
-            {/* Takeaway */}
-            <div className="db-section-heading">Takeaway</div>
-            <TrackerCard color={C.takeaway} label="Takeaway">
-              <div className="db-stat-pair">
-                <div className="db-stat-pair-item">
-                  <div className="db-big-num">£{stats.taSpend.toFixed(2)}</div>
-                  <div className="db-unit">total spent</div>
-                </div>
-                <div className="db-stat-divider" />
-                <div className="db-stat-pair-item">
-                  <div className="db-big-num">£{stats.taAvgDaily.toFixed(2)}</div>
-                  <div className="db-unit">avg daily spend</div>
-                </div>
-              </div>
-            </TrackerCard>
-
           </>
         )}
       </div>
